@@ -1,0 +1,5 @@
+{
+  "name": "ROEHN Flux",
+  "description": "Um assistente de especificação inteligente para integradores de automação residencial. Gera Listas de Materiais (BOM) precisas a partir dos requisitos do projeto usando IA Gemini.",
+  "requestFramePermissions": []
+}
