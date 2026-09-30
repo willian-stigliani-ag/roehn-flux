@@ -38,15 +38,24 @@ export const CounterInput: React.FC<CounterInputProps> = ({
     e.target.select();
   };
 
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    let val = parseInt(e.target.value, 10);
+    if (isNaN(val) || val < 0) {
+      onChange(0);
+    } else if (max !== undefined && val > max) {
+      onChange(max);
+    }
+  };
+
   const isActive = value > 0;
   const isMaxReached = max !== undefined && value >= max;
 
   return (
     <div 
-      className={`group flex flex-col justify-between h-full p-3.5 rounded-xl border transition-colors ${
+      className={`group flex flex-col justify-between h-full p-3.5 rounded-xl border transition-colors bg-white ${
         isActive 
-          ? 'bg-neutral-50/80 border-neutral-700 shadow-2xs' 
-          : 'bg-white border-gray-200 hover:border-gray-300 shadow-2xs'
+          ? 'border-neutral-800 shadow-2xs' 
+          : 'border-gray-200 hover:border-gray-300 shadow-2xs'
       }`}
     >
       <div className="min-w-0 flex-1 mb-3">
@@ -69,11 +78,7 @@ export const CounterInput: React.FC<CounterInputProps> = ({
 
       <div className="flex items-center justify-between pt-2.5 border-t border-gray-100 mt-auto">
         <span className="text-xs font-medium text-gray-400">
-          {isMaxReached ? (
-            <span className="text-amber-600 font-semibold">Máx. atingido ({max})</span>
-          ) : (
-            'Quantidade'
-          )}
+          Quantidade
         </span>
         <div className="flex items-center gap-1.5">
           <button
@@ -93,12 +98,11 @@ export const CounterInput: React.FC<CounterInputProps> = ({
             value={value.toString()}
             onChange={handleInputChange}
             onFocus={handleFocus}
+            onBlur={handleBlur}
             className={`w-11 text-center font-bold text-sm py-1 rounded-md border outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
               isActive
-                ? isMaxReached 
-                  ? 'bg-amber-50/50 border-amber-400 text-neutral-950 shadow-2xs'
-                  : 'bg-white border-neutral-400 text-neutral-950 shadow-2xs'
-                : 'bg-gray-50 border-gray-200 text-gray-600 focus:bg-white focus:border-neutral-400 focus:text-neutral-900'
+                ? 'bg-white border-[#746554]/50 focus:border-[#746554] focus:ring-1 focus:ring-[#746554]/25 text-neutral-950 shadow-2xs'
+                : 'bg-gray-50 border-gray-200 text-gray-600 focus:bg-white focus:border-[#746554] focus:ring-1 focus:ring-[#746554]/20 focus:text-neutral-900'
             }`}
           />
           <button

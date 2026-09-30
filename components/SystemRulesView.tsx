@@ -431,7 +431,7 @@ export const SystemRulesView: React.FC = () => {
       <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-2xs">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 pb-5 border-b border-gray-100">
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-700 mb-1">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#746554] mb-1">
               <BookOpen size={16} />
               <span>Regras de Engenharia & Dimensionamento</span>
             </div>
@@ -542,7 +542,7 @@ export const SystemRulesView: React.FC = () => {
             onClick={() => setSelectedCategory('all')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
               selectedCategory === 'all'
-                ? 'bg-neutral-900 text-white shadow-2xs'
+                ? 'bg-[#746554] text-white shadow-2xs'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -557,7 +557,7 @@ export const SystemRulesView: React.FC = () => {
                 onClick={() => setSelectedCategory(cat)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-neutral-900 text-white shadow-2xs'
+                    ? 'bg-[#746554] text-white shadow-2xs'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -585,7 +585,7 @@ export const SystemRulesView: React.FC = () => {
                 setSelectedType('all');
                 setSearchTerm('');
               }}
-              className="text-brand-600 hover:underline cursor-pointer"
+              className="text-[#746554] hover:underline cursor-pointer font-medium"
             >
               Resetar filtros
             </button>

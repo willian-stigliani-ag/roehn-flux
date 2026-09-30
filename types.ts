@@ -15,11 +15,11 @@ export enum DeviceType {
   KEYPAD_QUANTICA_K = 'KEYPAD_QUANTICA_K',
   KEYPAD_QUANTICA_L = 'KEYPAD_QUANTICA_L',
   KEYPAD_QUANTICA_P = 'KEYPAD_QUANTICA_P',
+  KEYPAD_QUANTICA_THERMOPAD = 'KEYPAD_QUANTICA_THERMOPAD',
   KEYPAD_FINNO_K = 'KEYPAD_FINNO_K',
   KEYPAD_FINNO_AIR = 'KEYPAD_FINNO_AIR',
   KEYPAD_FINNO_P = 'KEYPAD_FINNO_P',
   KEYPAD_BIANNI_K = 'KEYPAD_BIANNI_K',
-  KEYPAD_BIANNI_P = 'KEYPAD_BIANNI_P',
   KEYPAD_ION = 'KEYPAD_ION',
   // Sensors
   SENSOR_WIDELUX = 'SENSOR_WIDELUX',
@@ -55,6 +55,7 @@ export interface ProjectInputs {
 }
 
 export interface BomItem {
+  code?: string | number;
   sku: string;
   name: string;
   description: string;
@@ -110,6 +111,7 @@ export const DEVICE_LABELS: Record<DeviceType, string> = {
   [DeviceType.KEYPAD_QUANTICA_K]: 'Quantica Keypad',
   [DeviceType.KEYPAD_QUANTICA_L]: 'Quantica Keypad Lite',
   [DeviceType.KEYPAD_QUANTICA_P]: 'Quantica Pulsador',
+  [DeviceType.KEYPAD_QUANTICA_THERMOPAD]: 'Quantica Thermopad',
   [DeviceType.KEYPAD_FINNO_K]: 'Finno Keypad',
   [DeviceType.KEYPAD_FINNO_AIR]: 'Finno Air',
   [DeviceType.KEYPAD_FINNO_P]: 'Finno Pulsador',

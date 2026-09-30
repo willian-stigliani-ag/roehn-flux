@@ -174,6 +174,13 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
       bomCategory: 'User Interface' as const
     },
     {
+      id: 'KEYPAD_QT_GROUP',
+      types: [DeviceType.KEYPAD_QUANTICA_THERMOPAD],
+      targetCategory: 'Keypad',
+      typeKeywords: ['Quantica Thermopad', 'Thermopad', 'RQR-TP', 'RQR-T'],
+      bomCategory: 'User Interface' as const
+    },
+    {
       id: 'KEYPAD_FINNO_K_GROUP',
       types: [DeviceType.KEYPAD_FINNO_K],
       targetCategory: 'Keypad',
@@ -199,13 +206,6 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
       types: [DeviceType.KEYPAD_BIANNI_K],
       targetCategory: 'Keypad',
       typeKeywords: ['Bianni Keypad', 'RBN-K'],
-      bomCategory: 'User Interface' as const
-    },
-    {
-      id: 'KEYPAD_BIANNI_P_GROUP',
-      types: [DeviceType.KEYPAD_BIANNI_P],
-      targetCategory: 'Keypad',
-      typeKeywords: ['Bianni Pulsador', 'RBN-P'],
       bomCategory: 'User Interface' as const
     },
     {
@@ -658,6 +658,14 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
   });
 
   const finalItems = Array.from(aggregatedItemsMap.values());
+  finalItems.forEach(item => {
+    if (!item.code) {
+      const prod = catalog.find(p => p.model === item.sku);
+      if (prod) {
+        item.code = prod.id;
+      }
+    }
+  });
   const totalDevices = Object.values(activeCounts).reduce((a, b) => a + b, 0);
   
   // Calculate Category Counts
@@ -673,11 +681,11 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
       keypads: (activeCounts[DeviceType.KEYPAD_QUANTICA_K] || 0) +
                (activeCounts[DeviceType.KEYPAD_QUANTICA_L] || 0) +
                (activeCounts[DeviceType.KEYPAD_QUANTICA_P] || 0) +
+               (activeCounts[DeviceType.KEYPAD_QUANTICA_THERMOPAD] || 0) +
                (activeCounts[DeviceType.KEYPAD_FINNO_K] || 0) +
                (activeCounts[DeviceType.KEYPAD_FINNO_AIR] || 0) +
                (activeCounts[DeviceType.KEYPAD_FINNO_P] || 0) +
                (activeCounts[DeviceType.KEYPAD_BIANNI_K] || 0) +
-               (activeCounts[DeviceType.KEYPAD_BIANNI_P] || 0) +
                (activeCounts[DeviceType.KEYPAD_ION] || 0),
       sensors: (activeCounts[DeviceType.SENSOR_WIDELUX] || 0) +
                (activeCounts[DeviceType.SENSOR_XRAY] || 0) +

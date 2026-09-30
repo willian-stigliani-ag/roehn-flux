@@ -16,7 +16,8 @@ import {
   ClipboardList,
   Grid3x3,
   Radar,
-  RotateCcw
+  RotateCcw,
+  ChevronDown
 } from 'lucide-react';
 
 const INITIAL_CATALOG: Product[] = [
@@ -346,6 +347,23 @@ const INITIAL_CATALOG: Product[] = [
     consumesAddress: 0,
     consumesPNETPorts: 1
   },
+  { 
+    id: 6004, 
+    category: 'Keypad', 
+    type: 'Quantica Thermopad', 
+    brand: 'ROEHN', 
+    model: 'RQR-TP', 
+    description: 'Thermopad - Keypad para controle de ar condicionado',
+    channels: 1,
+    suppliesLPower: 0,
+    suppliesNPower: 0,
+    suppliesAddress: 0,
+    suppliesPNETPorts: 0,
+    consumesLPower: 0,
+    consumesNPower: 1.8,
+    consumesAddress: 1,
+    consumesPNETPorts: 0
+  },
   // Keypads - Família FINNO
   { 
     id: 6010, 
@@ -406,23 +424,6 @@ const INITIAL_CATALOG: Product[] = [
     brand: 'ROEHN', 
     model: 'RBN-K', 
     description: 'Teclado Série Bianni Keypad',
-    channels: 1,
-    suppliesLPower: 0,
-    suppliesNPower: 0,
-    suppliesAddress: 0,
-    suppliesPNETPorts: 0,
-    consumesLPower: 0,
-    consumesNPower: 1.8,
-    consumesAddress: 1,
-    consumesPNETPorts: 0
-  },
-  { 
-    id: 6021, 
-    category: 'Keypad', 
-    type: 'Bianni Pulsador', 
-    brand: 'ROEHN', 
-    model: 'RBN-P', 
-    description: 'Pulsador Série Bianni Pulsador',
     channels: 1,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -520,11 +521,11 @@ const INITIAL_STATE: ProjectInputs = {
     [DeviceType.KEYPAD_QUANTICA_K]: 0,
     [DeviceType.KEYPAD_QUANTICA_L]: 0,
     [DeviceType.KEYPAD_QUANTICA_P]: 0,
+    [DeviceType.KEYPAD_QUANTICA_THERMOPAD]: 0,
     [DeviceType.KEYPAD_FINNO_K]: 0,
     [DeviceType.KEYPAD_FINNO_AIR]: 0,
     [DeviceType.KEYPAD_FINNO_P]: 0,
     [DeviceType.KEYPAD_BIANNI_K]: 0,
-    [DeviceType.KEYPAD_BIANNI_P]: 0,
     [DeviceType.KEYPAD_ION]: 0,
     [DeviceType.SENSOR_WIDELUX]: 0,
     [DeviceType.SENSOR_XRAY]: 0,
@@ -543,6 +544,41 @@ const App: React.FC = () => {
   const [result, setResult] = useState<SpecificationResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  type CategoryAccordionId = 'lighting' | 'shades' | 'climate' | 'interfaces' | 'sensors';
+  const ALL_CATEGORIES: CategoryAccordionId[] = ['lighting', 'shades', 'climate', 'interfaces', 'sensors'];
+  const [autoCollapse, setAutoCollapse] = useState<boolean>(true);
+  const [expandedCategories, setExpandedCategories] = useState<CategoryAccordionId[]>(['lighting']);
+
+  const handleToggleAutoCollapse = () => {
+    setAutoCollapse(prev => {
+      const next = !prev;
+      if (next) {
+        // Transição desativado -> ativado: todos os containers são recolhidos, mantendo apenas o primeiro expandido
+        setExpandedCategories(['lighting']);
+      }
+      // Ao desativar o recolhimento automático: mantém o estado atual das seções
+      return next;
+    });
+  };
+
+  const toggleCategory = (id: CategoryAccordionId) => {
+    setExpandedCategories(prev => {
+      if (autoCollapse) {
+        // Ao ser ativado: mantendo apenas 1 aberto por vez (ao expandir 1, os outros são recolhidos)
+        if (prev.includes(id)) {
+          return [];
+        }
+        return [id];
+      } else {
+        // Quando desativado: gestão manual, múltiplos podem ser expandidos simultaneamente
+        if (prev.includes(id)) {
+          return prev.filter(c => c !== id);
+        }
+        return [...prev, id];
+      }
+    });
+  };
 
   const handleAddProduct = (newProduct: Product) => {
     setCatalog(prev => [...prev, newProduct]);
@@ -611,7 +647,8 @@ const App: React.FC = () => {
   const quanticaCount = 
     inputs.counts[DeviceType.KEYPAD_QUANTICA_K] +
     inputs.counts[DeviceType.KEYPAD_QUANTICA_L] +
-    inputs.counts[DeviceType.KEYPAD_QUANTICA_P];
+    inputs.counts[DeviceType.KEYPAD_QUANTICA_P] +
+    inputs.counts[DeviceType.KEYPAD_QUANTICA_THERMOPAD];
 
   const finnoCount = 
     inputs.counts[DeviceType.KEYPAD_FINNO_K] +
@@ -619,8 +656,7 @@ const App: React.FC = () => {
     inputs.counts[DeviceType.KEYPAD_FINNO_P];
 
   const bianniCount = 
-    inputs.counts[DeviceType.KEYPAD_BIANNI_K] +
-    inputs.counts[DeviceType.KEYPAD_BIANNI_P];
+    inputs.counts[DeviceType.KEYPAD_BIANNI_K] || 0;
 
   const ionCount = 
     inputs.counts[DeviceType.KEYPAD_ION];
@@ -644,24 +680,24 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-12 bg-gray-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm print:hidden">
+      <header className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40 shadow-xs print:hidden">
         <div className="mx-auto px-2 sm:px-4 h-16 flex items-center justify-between transition-all max-w-[98%] 2xl:max-w-[1920px]">
-          <div className="flex items-center gap-2">
-            <div className="bg-brand-600 p-2 rounded-lg text-white">
+          <div className="flex items-center gap-2.5">
+            <div className="bg-[#746554] p-2 rounded-lg text-white shadow-2xs">
               <Zap size={20} fill="currentColor" />
             </div>
             <h1 className="font-bold text-xl text-gray-800 tracking-tight">
-              ROEHN Flux <span className="text-gray-500 font-light">| Ferramenta de Especificação</span>
+              ROEHN Flux
             </h1>
           </div>
           
-          <nav className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+          <nav className="flex items-center gap-1 bg-gray-100/80 p-1 rounded-lg border border-gray-200/60">
             <button
               onClick={() => setView('integrator')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all cursor-pointer ${
                 view === 'integrator' 
-                  ? 'bg-white text-brand-700 shadow-sm' 
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white text-[#746554] font-semibold shadow-2xs' 
+                  : 'text-gray-500 hover:text-gray-800'
               }`}
             >
               <ClipboardList size={16} />
@@ -669,10 +705,10 @@ const App: React.FC = () => {
             </button>
             <button
               onClick={() => setView('backoffice')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all cursor-pointer ${
                 view === 'backoffice' 
-                  ? 'bg-white text-brand-700 shadow-sm' 
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white text-[#746554] font-semibold shadow-2xs' 
+                  : 'text-gray-500 hover:text-gray-800'
               }`}
             >
               <Settings size={16} />
@@ -699,13 +735,14 @@ const App: React.FC = () => {
               <ResultView 
                 data={result} 
                 projectName={inputs.projectName}
+                integratorName={inputs.integratorName}
                 onReset={() => setResult(null)} 
                 onNewProject={handleNewProject}
                 showReasoning={showReasoning} 
               />
             ) : (
               <div className="animate-fade-in w-full">
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4 pb-24 sm:pb-20">
                   {/* Informações do Projeto */}
                   <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-2xs">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -719,7 +756,7 @@ const App: React.FC = () => {
                           placeholder="ex: Residência Silva"
                           value={inputs.projectName}
                           onChange={handleTextChange}
-                          className="w-full px-3.5 py-2 rounded-lg bg-gray-50/70 border border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-neutral-200 focus:border-neutral-400 outline-none text-sm transition-all shadow-2xs"
+                          className="w-full px-3.5 py-2 rounded-lg bg-gray-50/70 border border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-[#746554]/20 focus:border-[#746554] outline-none text-sm transition-all shadow-2xs"
                         />
                       </div>
                       <div>
@@ -732,297 +769,412 @@ const App: React.FC = () => {
                           placeholder="ex: Tech Soluções Ltda."
                           value={inputs.integratorName}
                           onChange={handleTextChange}
-                          className="w-full px-3.5 py-2 rounded-lg bg-gray-50/70 border border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-neutral-200 focus:border-neutral-400 outline-none text-sm transition-all shadow-2xs"
+                          className="w-full px-3.5 py-2 rounded-lg bg-gray-50/70 border border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-[#746554]/20 focus:border-[#746554] outline-none text-sm transition-all shadow-2xs"
                         />
                       </div>
                     </div>
                   </div>
 
-                  {/* Categorias Inline (uma abaixo da outra, objetos lado a lado) */}
-                  <div className="space-y-6">
-                    {/* 1. Luzes (Iluminação) */}
-                    <section className="space-y-2.5">
-                      <div className="h-6 flex items-center justify-between">
-                        <div className="flex items-center gap-2 font-bold text-xs text-gray-700 uppercase tracking-wider">
-                          <Lightbulb size={16} className="text-gray-800" />
+                  {/* Cabeçalho da Seção de Categorias com Toggle Switch 'Recolher automaticamente' */}
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      Categorias de Dispositivos
+                    </span>
+                    <label className="inline-flex items-center gap-2.5 cursor-pointer select-none">
+                      <span className="text-xs font-medium text-gray-600">
+                        Recolher automaticamente
+                      </span>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={autoCollapse}
+                        onClick={handleToggleAutoCollapse}
+                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                          autoCollapse ? 'bg-[#746554]' : 'bg-gray-200'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                            autoCollapse ? 'translate-x-4' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </label>
+                  </div>
+
+                  {/* Categorias com Containers Expansíveis (Accordion) */}
+                  <div className="space-y-3">
+                    {/* 1. Iluminação */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-2xs overflow-hidden transition-all">
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory('lighting')}
+                        className="w-full px-4 sm:px-5 py-3.5 flex items-center justify-between text-left hover:bg-gray-50/70 transition-colors cursor-pointer select-none"
+                      >
+                        <div className="flex items-center gap-2.5 font-bold text-xs sm:text-sm text-gray-800 uppercase tracking-wider">
+                          <div className={`p-1.5 rounded-lg transition-colors ${
+                            expandedCategories.includes('lighting') ? 'bg-[#746554]/10 text-[#746554]' : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            <Lightbulb size={18} />
+                          </div>
                           <span>Iluminação</span>
                         </div>
-                        {lightingCount > 0 && (
-                          <span className="h-5 inline-flex items-center px-2.5 text-xs font-semibold leading-none text-neutral-900 bg-neutral-100 rounded-full">
-                            {lightingCount} {lightingCount === 1 ? 'circuito' : 'circuitos'}
-                          </span>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        <CounterInput 
-                          label="Circuito Liga/Desliga"
-                          sublabel="Circuitos de acionamento simples"
-                          value={inputs.counts[DeviceType.LIGHT_ONOFF]} 
-                          onChange={(v) => handleCountChange(DeviceType.LIGHT_ONOFF, v)}
-                        />
-                        <CounterInput 
-                          label="Circuito Dimmer"
-                          sublabel="Circuitos de acionamento dimerizável"
-                          value={inputs.counts[DeviceType.LIGHT_DIMMER]} 
-                          onChange={(v) => handleCountChange(DeviceType.LIGHT_DIMMER, v)}
-                        />
-                        <CounterInput 
-                          label="Circuito PWM"
-                          sublabel="Circuitos de Fitas LED luminárias de controle PWM"
-                          value={inputs.counts[DeviceType.LIGHT_PWM]} 
-                          onChange={(v) => handleCountChange(DeviceType.LIGHT_PWM, v)}
-                        />
-                        <CounterInput 
-                          label="Circuito DALI"
-                          sublabel="Circuitos com drivers endereçáveis DALI"
-                          value={inputs.counts[DeviceType.LIGHT_DALI]} 
-                          onChange={(v) => handleCountChange(DeviceType.LIGHT_DALI, v)}
-                        />
-                      </div>
-                    </section>
+                        <div className="flex items-center gap-2.5">
+                          {lightingCount > 0 && (
+                            <span className="h-5 inline-flex items-center px-2.5 text-xs font-semibold leading-none text-neutral-900 bg-gray-100 rounded-full border border-gray-200/80">
+                              {lightingCount} {lightingCount === 1 ? 'circuito' : 'circuitos'}
+                            </span>
+                          )}
+                          <ChevronDown 
+                            size={18} 
+                            className={`text-gray-400 transition-transform duration-200 ${
+                              expandedCategories.includes('lighting') ? 'rotate-180 text-gray-700' : ''
+                            }`} 
+                          />
+                        </div>
+                      </button>
 
-                    {/* 2. Cortinas (Persianas & Cortinas) */}
-                    <section className="space-y-2.5">
-                      <div className="h-6 flex items-center justify-between">
-                        <div className="flex items-center gap-2 font-bold text-xs text-gray-700 uppercase tracking-wider">
-                          <Blinds size={16} className="text-gray-800" />
+                      {expandedCategories.includes('lighting') && (
+                        <div className="p-4 sm:p-5 pt-1 sm:pt-2 border-t border-gray-100 animate-fade-in">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                            <CounterInput 
+                              label="Circuito Liga/Desliga"
+                              sublabel="Circuitos de acionamento simples"
+                              value={inputs.counts[DeviceType.LIGHT_ONOFF]} 
+                              onChange={(v) => handleCountChange(DeviceType.LIGHT_ONOFF, v)}
+                            />
+                            <CounterInput 
+                              label="Circuito Dimmer"
+                              sublabel="Circuitos de acionamento dimerizável"
+                              value={inputs.counts[DeviceType.LIGHT_DIMMER]} 
+                              onChange={(v) => handleCountChange(DeviceType.LIGHT_DIMMER, v)}
+                            />
+                            <CounterInput 
+                              label="Circuito PWM"
+                              sublabel="Circuitos de Fitas LED luminárias de controle PWM"
+                              value={inputs.counts[DeviceType.LIGHT_PWM]} 
+                              onChange={(v) => handleCountChange(DeviceType.LIGHT_PWM, v)}
+                            />
+                            <CounterInput 
+                              label="Circuito DALI"
+                              sublabel="Circuitos com drivers endereçáveis DALI"
+                              value={inputs.counts[DeviceType.LIGHT_DALI]} 
+                              onChange={(v) => handleCountChange(DeviceType.LIGHT_DALI, v)}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 2. Persianas & Cortinas */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-2xs overflow-hidden transition-all">
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory('shades')}
+                        className="w-full px-4 sm:px-5 py-3.5 flex items-center justify-between text-left hover:bg-gray-50/70 transition-colors cursor-pointer select-none"
+                      >
+                        <div className="flex items-center gap-2.5 font-bold text-xs sm:text-sm text-gray-800 uppercase tracking-wider">
+                          <div className={`p-1.5 rounded-lg transition-colors ${
+                            expandedCategories.includes('shades') ? 'bg-[#746554]/10 text-[#746554]' : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            <Blinds size={18} />
+                          </div>
                           <span>Persianas & Cortinas</span>
                         </div>
-                        {shadeCount > 0 && (
-                          <span className="h-5 inline-flex items-center px-2.5 text-xs font-semibold leading-none text-neutral-900 bg-neutral-100 rounded-full">
-                            {shadeCount} {shadeCount === 1 ? 'persiana' : 'persianas'}
-                          </span>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        <CounterInput 
-                          label="Cortina com Fio"
-                          sublabel="Cortinas ou persianas motorizadas"
-                          value={inputs.counts[DeviceType.SHADE_WIRED]} 
-                          onChange={(v) => handleCountChange(DeviceType.SHADE_WIRED, v)}
-                        />
-                        <CounterInput 
-                          label="Cortina sem Fio"
-                          sublabel="Cortinas motorizadas com controle via RF"
-                          value={inputs.counts[DeviceType.SHADE_WIRELESS]} 
-                          onChange={(v) => handleCountChange(DeviceType.SHADE_WIRELESS, v)}
-                        />
-                      </div>
-                    </section>
+                        <div className="flex items-center gap-2.5">
+                          {shadeCount > 0 && (
+                            <span className="h-5 inline-flex items-center px-2.5 text-xs font-semibold leading-none text-neutral-900 bg-gray-100 rounded-full border border-gray-200/80">
+                              {shadeCount} {shadeCount === 1 ? 'persiana' : 'persianas'}
+                            </span>
+                          )}
+                          <ChevronDown 
+                            size={18} 
+                            className={`text-gray-400 transition-transform duration-200 ${
+                              expandedCategories.includes('shades') ? 'rotate-180 text-gray-700' : ''
+                            }`} 
+                          />
+                        </div>
+                      </button>
 
-                    {/* 3. Ar Condicionado (Climatização) */}
-                    <section className="space-y-2.5">
-                      <div className="h-6 flex items-center justify-between">
-                        <div className="flex items-center gap-2 font-bold text-xs text-gray-700 uppercase tracking-wider">
-                          <Thermometer size={16} className="text-gray-800" />
+                      {expandedCategories.includes('shades') && (
+                        <div className="p-4 sm:p-5 pt-1 sm:pt-2 border-t border-gray-100 animate-fade-in">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                            <CounterInput 
+                              label="Cortina com Fio"
+                              sublabel="Cortinas ou persianas motorizadas"
+                              value={inputs.counts[DeviceType.SHADE_WIRED]} 
+                              onChange={(v) => handleCountChange(DeviceType.SHADE_WIRED, v)}
+                            />
+                            <CounterInput 
+                              label="Cortina sem Fio"
+                              sublabel="Cortinas motorizadas com controle via RF"
+                              value={inputs.counts[DeviceType.SHADE_WIRELESS]} 
+                              onChange={(v) => handleCountChange(DeviceType.SHADE_WIRELESS, v)}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 3. Climatização */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-2xs overflow-hidden transition-all">
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory('climate')}
+                        className="w-full px-4 sm:px-5 py-3.5 flex items-center justify-between text-left hover:bg-gray-50/70 transition-colors cursor-pointer select-none"
+                      >
+                        <div className="flex items-center gap-2.5 font-bold text-xs sm:text-sm text-gray-800 uppercase tracking-wider">
+                          <div className={`p-1.5 rounded-lg transition-colors ${
+                            expandedCategories.includes('climate') ? 'bg-[#746554]/10 text-[#746554]' : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            <Thermometer size={18} />
+                          </div>
                           <span>Climatização</span>
                         </div>
-                        {climateCount > 0 && (
-                          <span className="h-5 inline-flex items-center px-2.5 text-xs font-semibold leading-none text-neutral-900 bg-neutral-100 rounded-full">
-                            {climateCount} {climateCount === 1 ? 'zona' : 'zonas'}
-                          </span>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        <CounterInput 
-                          label="Ar-condicionado IR"
-                          sublabel="Splits de ar-condicionado com controle IR"
-                          value={inputs.counts[DeviceType.CLIMATE_IR]} 
-                          onChange={(v) => handleCountChange(DeviceType.CLIMATE_IR, v)}
-                        />
-                        <CounterInput 
-                          label="Ar-condicionado VRV/VRF"
-                          sublabel="Evaporadoras de ar-condicionado centralizado"
-                          value={inputs.counts[DeviceType.CLIMATE_VRV]} 
-                          onChange={(v) => handleCountChange(DeviceType.CLIMATE_VRV, v)}
-                        />
-                      </div>
-                    </section>
+                        <div className="flex items-center gap-2.5">
+                          {climateCount > 0 && (
+                            <span className="h-5 inline-flex items-center px-2.5 text-xs font-semibold leading-none text-neutral-900 bg-gray-100 rounded-full border border-gray-200/80">
+                              {climateCount} {climateCount === 1 ? 'zona' : 'zonas'}
+                            </span>
+                          )}
+                          <ChevronDown 
+                            size={18} 
+                            className={`text-gray-400 transition-transform duration-200 ${
+                              expandedCategories.includes('climate') ? 'rotate-180 text-gray-700' : ''
+                            }`} 
+                          />
+                        </div>
+                      </button>
 
-                    {/* 4. Interfaces (Interfaces de Usuário) */}
-                    <section className="space-y-4">
-                      <div className="h-6 flex items-center justify-between">
-                        <div className="flex items-center gap-2 font-bold text-xs text-gray-700 uppercase tracking-wider">
-                          <Grid3x3 size={16} className="text-gray-800" />
+                      {expandedCategories.includes('climate') && (
+                        <div className="p-4 sm:p-5 pt-1 sm:pt-2 border-t border-gray-100 animate-fade-in">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                            <CounterInput 
+                              label="Ar-condicionado IR"
+                              sublabel="Splits de ar-condicionado com controle IR"
+                              value={inputs.counts[DeviceType.CLIMATE_IR]} 
+                              onChange={(v) => handleCountChange(DeviceType.CLIMATE_IR, v)}
+                            />
+                            <CounterInput 
+                              label="Ar-condicionado VRV/VRF"
+                              sublabel="Evaporadoras de ar-condicionado centralizado"
+                              value={inputs.counts[DeviceType.CLIMATE_VRV]} 
+                              onChange={(v) => handleCountChange(DeviceType.CLIMATE_VRV, v)}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 4. Interfaces de Usuário */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-2xs overflow-hidden transition-all">
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory('interfaces')}
+                        className="w-full px-4 sm:px-5 py-3.5 flex items-center justify-between text-left hover:bg-gray-50/70 transition-colors cursor-pointer select-none"
+                      >
+                        <div className="flex items-center gap-2.5 font-bold text-xs sm:text-sm text-gray-800 uppercase tracking-wider">
+                          <div className={`p-1.5 rounded-lg transition-colors ${
+                            expandedCategories.includes('interfaces') ? 'bg-[#746554]/10 text-[#746554]' : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            <Grid3x3 size={18} />
+                          </div>
                           <span>Interfaces de Usuário</span>
                         </div>
-                        {keypadCount > 0 && (
-                          <span className="h-5 inline-flex items-center px-2.5 text-xs font-semibold leading-none text-neutral-900 bg-neutral-100 rounded-full">
-                            {keypadCount} {keypadCount === 1 ? 'teclado' : 'teclados'}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Subcategorias por Família de Produto */}
-                      <div className="space-y-4">
-                        {/* Família QUANTICA */}
-                        <div className="space-y-2">
-                          <div className="h-5 flex items-center justify-between">
-                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                              Família QUANTICA
+                        <div className="flex items-center gap-2.5">
+                          {keypadCount > 0 && (
+                            <span className="h-5 inline-flex items-center px-2.5 text-xs font-semibold leading-none text-neutral-900 bg-gray-100 rounded-full border border-gray-200/80">
+                              {keypadCount} {keypadCount === 1 ? 'teclado' : 'teclados'}
                             </span>
-                            {quanticaCount > 0 && (
-                              <span className="text-[11px] font-medium leading-none text-gray-500">
-                                {quanticaCount} {quanticaCount === 1 ? 'item' : 'itens'}
-                              </span>
-                            )}
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                            <CounterInput 
-                              label="Keypad"
-                              sublabel="Keypad Quântica"
-                              value={inputs.counts[DeviceType.KEYPAD_QUANTICA_K]} 
-                              onChange={(v) => handleCountChange(DeviceType.KEYPAD_QUANTICA_K, v)}
-                            />
-                            <CounterInput 
-                              label="Keypad Lite"
-                              sublabel="Keypad QUântica Lite"
-                              value={inputs.counts[DeviceType.KEYPAD_QUANTICA_L]} 
-                              onChange={(v) => handleCountChange(DeviceType.KEYPAD_QUANTICA_L, v)}
-                            />
-                            <CounterInput 
-                              label="Pulsador"
-                              sublabel="Pulsador Quântica"
-                              value={inputs.counts[DeviceType.KEYPAD_QUANTICA_P]} 
-                              onChange={(v) => handleCountChange(DeviceType.KEYPAD_QUANTICA_P, v)}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Família FINNO */}
-                        <div className="space-y-2">
-                          <div className="h-5 flex items-center justify-between">
-                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                              Família FINNO
-                            </span>
-                            {finnoCount > 0 && (
-                              <span className="text-[11px] font-medium leading-none text-gray-500">
-                                {finnoCount} {finnoCount === 1 ? 'item' : 'itens'}
-                              </span>
-                            )}
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                            <CounterInput 
-                              label="Keypad"
-                              sublabel="Keypad Finno com fio"
-                              value={inputs.counts[DeviceType.KEYPAD_FINNO_K]} 
-                              onChange={(v) => handleCountChange(DeviceType.KEYPAD_FINNO_K, v)}
-                            />
-                            <CounterInput 
-                              label="Air"
-                              sublabel="Keypad Finno sem fio"
-                              value={inputs.counts[DeviceType.KEYPAD_FINNO_AIR]} 
-                              onChange={(v) => handleCountChange(DeviceType.KEYPAD_FINNO_AIR, Math.min(32, v))}
-                              max={32}
-                            />
-                            <CounterInput 
-                              label="Pulsador"
-                              sublabel="Pulsador Finno"
-                              value={inputs.counts[DeviceType.KEYPAD_FINNO_P]} 
-                              onChange={(v) => handleCountChange(DeviceType.KEYPAD_FINNO_P, v)}
-                            />
-                          </div>
-                          {inputs.counts[DeviceType.KEYPAD_FINNO_AIR] > 0 && (
-                            <div className="flex flex-wrap items-center gap-2 px-3 py-2 bg-neutral-100/90 rounded-lg text-xs text-neutral-700 border border-neutral-200/60">
-                              <span className="font-semibold text-neutral-900">
-                                Finno Air: {inputs.counts[DeviceType.KEYPAD_FINNO_AIR]}/32
-                              </span>
-                              <span className="text-gray-400">•</span>
-                              <span>
-                                {Math.ceil(inputs.counts[DeviceType.KEYPAD_FINNO_AIR] / 16)}{' '}
-                                {Math.ceil(inputs.counts[DeviceType.KEYPAD_FINNO_AIR] / 16) === 1 ? 'antena receptora' : 'antenas receptoras'}{' '}
-                                (até 16 keypads por antena)
-                              </span>
-                            </div>
                           )}
+                          <ChevronDown 
+                            size={18} 
+                            className={`text-gray-400 transition-transform duration-200 ${
+                              expandedCategories.includes('interfaces') ? 'rotate-180 text-gray-700' : ''
+                            }`} 
+                          />
                         </div>
+                      </button>
 
-                        {/* Família BIANNI */}
-                        <div className="space-y-2">
-                          <div className="h-5 flex items-center justify-between">
-                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                              Família BIANNI
-                            </span>
-                            {bianniCount > 0 && (
-                              <span className="text-[11px] font-medium leading-none text-gray-500">
-                                {bianniCount} {bianniCount === 1 ? 'item' : 'itens'}
+                      {expandedCategories.includes('interfaces') && (
+                        <div className="p-4 sm:p-5 pt-3 border-t border-gray-100 animate-fade-in space-y-4">
+                          {/* Família QUANTICA */}
+                          <div className="space-y-2">
+                            <div className="h-5 flex items-center justify-between">
+                              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                Família QUANTICA
                               </span>
-                            )}
+                              {quanticaCount > 0 && (
+                                <span className="text-[11px] font-medium leading-none text-gray-500">
+                                  {quanticaCount} {quanticaCount === 1 ? 'item' : 'itens'}
+                                </span>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                              <CounterInput 
+                                label="Keypad"
+                                sublabel="Keypad Quântica"
+                                value={inputs.counts[DeviceType.KEYPAD_QUANTICA_K]} 
+                                onChange={(v) => handleCountChange(DeviceType.KEYPAD_QUANTICA_K, v)}
+                              />
+                              <CounterInput 
+                                label="Keypad Lite"
+                                sublabel="Keypad Quântica Lite"
+                                value={inputs.counts[DeviceType.KEYPAD_QUANTICA_L]} 
+                                onChange={(v) => handleCountChange(DeviceType.KEYPAD_QUANTICA_L, v)}
+                              />
+                              <CounterInput 
+                                label="Pulsador"
+                                sublabel="Pulsador Quântica"
+                                value={inputs.counts[DeviceType.KEYPAD_QUANTICA_P]} 
+                                onChange={(v) => handleCountChange(DeviceType.KEYPAD_QUANTICA_P, v)}
+                              />
+                              <CounterInput 
+                                label="Thermopad"
+                                sublabel="Keypad para controle de ar condicionado"
+                                value={inputs.counts[DeviceType.KEYPAD_QUANTICA_THERMOPAD]} 
+                                onChange={(v) => handleCountChange(DeviceType.KEYPAD_QUANTICA_THERMOPAD, v)}
+                              />
+                            </div>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                            <CounterInput 
-                              label="Keypad"
-                              sublabel="Keypad Bianni"
-                              value={inputs.counts[DeviceType.KEYPAD_BIANNI_K]} 
-                              onChange={(v) => handleCountChange(DeviceType.KEYPAD_BIANNI_K, v)}
-                            />
-                            <CounterInput 
-                              label="Pulsador"
-                              sublabel="Pulsador Bianni"
-                              value={inputs.counts[DeviceType.KEYPAD_BIANNI_P]} 
-                              onChange={(v) => handleCountChange(DeviceType.KEYPAD_BIANNI_P, v)}
-                            />
-                          </div>
-                        </div>
 
-                        {/* Família ION */}
-                        <div className="space-y-2">
-                          <div className="h-5 flex items-center justify-between">
-                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                              Família ION
-                            </span>
-                            {ionCount > 0 && (
-                              <span className="text-[11px] font-medium leading-none text-gray-500">
-                                {ionCount} {ionCount === 1 ? 'item' : 'itens'}
+                          {/* Família FINNO */}
+                          <div className="space-y-2">
+                            <div className="h-5 flex items-center justify-between">
+                              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                Família FINNO
                               </span>
-                            )}
+                              {finnoCount > 0 && (
+                                <span className="text-[11px] font-medium leading-none text-gray-500">
+                                  {finnoCount} {finnoCount === 1 ? 'item' : 'itens'}
+                                </span>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                              <CounterInput 
+                                label="Keypad"
+                                sublabel="Keypad Finno com fio"
+                                value={inputs.counts[DeviceType.KEYPAD_FINNO_K]} 
+                                onChange={(v) => handleCountChange(DeviceType.KEYPAD_FINNO_K, v)}
+                              />
+                              <CounterInput 
+                                label="Air"
+                                sublabel="Keypad Finno sem fio"
+                                value={inputs.counts[DeviceType.KEYPAD_FINNO_AIR]} 
+                                onChange={(v) => handleCountChange(DeviceType.KEYPAD_FINNO_AIR, Math.min(32, Math.max(0, v)))}
+                                max={32}
+                              />
+                              <CounterInput 
+                                label="Pulsador"
+                                sublabel="Pulsador Finno"
+                                value={inputs.counts[DeviceType.KEYPAD_FINNO_P]} 
+                                onChange={(v) => handleCountChange(DeviceType.KEYPAD_FINNO_P, v)}
+                              />
+                            </div>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                            <CounterInput 
-                              label="Keypad"
-                              sublabel="Keypad Ion"
-                              value={inputs.counts[DeviceType.KEYPAD_ION]} 
-                              onChange={(v) => handleCountChange(DeviceType.KEYPAD_ION, v)}
-                            />
+
+                          {/* Família BIANNI */}
+                          <div className="space-y-2">
+                            <div className="h-5 flex items-center justify-between">
+                              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                Família BIANNI
+                              </span>
+                              {bianniCount > 0 && (
+                                <span className="text-[11px] font-medium leading-none text-gray-500">
+                                  {bianniCount} {bianniCount === 1 ? 'item' : 'itens'}
+                                </span>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                              <CounterInput 
+                                label="Keypad"
+                                sublabel="Keypad Bianni"
+                                value={inputs.counts[DeviceType.KEYPAD_BIANNI_K]} 
+                                onChange={(v) => handleCountChange(DeviceType.KEYPAD_BIANNI_K, v)}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Família ION */}
+                          <div className="space-y-2">
+                            <div className="h-5 flex items-center justify-between">
+                              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                Família ION
+                              </span>
+                              {ionCount > 0 && (
+                                <span className="text-[11px] font-medium leading-none text-gray-500">
+                                  {ionCount} {ionCount === 1 ? 'item' : 'itens'}
+                                </span>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                              <CounterInput 
+                                label="Keypad"
+                                sublabel="Keypad Ion"
+                                value={inputs.counts[DeviceType.KEYPAD_ION]} 
+                                onChange={(v) => handleCountChange(DeviceType.KEYPAD_ION, v)}
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </section>
+                      )}
+                    </div>
 
                     {/* 5. Sensores */}
-                    <section className="space-y-2.5">
-                      <div className="h-6 flex items-center justify-between">
-                        <div className="flex items-center gap-2 font-bold text-xs text-gray-700 uppercase tracking-wider">
-                          <Radar size={16} className="text-gray-800" />
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-2xs overflow-hidden transition-all">
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory('sensors')}
+                        className="w-full px-4 sm:px-5 py-3.5 flex items-center justify-between text-left hover:bg-gray-50/70 transition-colors cursor-pointer select-none"
+                      >
+                        <div className="flex items-center gap-2.5 font-bold text-xs sm:text-sm text-gray-800 uppercase tracking-wider">
+                          <div className={`p-1.5 rounded-lg transition-colors ${
+                            expandedCategories.includes('sensors') ? 'bg-[#746554]/10 text-[#746554]' : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            <Radar size={18} />
+                          </div>
                           <span>Sensores</span>
                         </div>
-                        {sensorCount > 0 && (
-                          <span className="h-5 inline-flex items-center px-2.5 text-xs font-semibold leading-none text-neutral-900 bg-neutral-100 rounded-full">
-                            {sensorCount} {sensorCount === 1 ? 'sensor' : 'sensores'}
-                          </span>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        <CounterInput 
-                          label="Widelux"
-                          sublabel="Sensor de movimento e luminosidade"
-                          value={inputs.counts[DeviceType.SENSOR_WIDELUX]} 
-                          onChange={(v) => handleCountChange(DeviceType.SENSOR_WIDELUX, v)}
-                        />
-                        <CounterInput 
-                          label="X-Ray"
-                          sublabel="Sensor de temperatura e qualidade do ar"
-                          value={inputs.counts[DeviceType.SENSOR_XRAY]} 
-                          onChange={(v) => handleCountChange(DeviceType.SENSOR_XRAY, v)}
-                        />
-                        <CounterInput 
-                          label="Nano"
-                          sublabel="Sensor de movimento simples"
-                          value={inputs.counts[DeviceType.SENSOR_NANO]} 
-                          onChange={(v) => handleCountChange(DeviceType.SENSOR_NANO, v)}
-                        />
-                      </div>
-                    </section>
+                        <div className="flex items-center gap-2.5">
+                          {sensorCount > 0 && (
+                            <span className="h-5 inline-flex items-center px-2.5 text-xs font-semibold leading-none text-neutral-900 bg-gray-100 rounded-full border border-gray-200/80">
+                              {sensorCount} {sensorCount === 1 ? 'sensor' : 'sensores'}
+                            </span>
+                          )}
+                          <ChevronDown 
+                            size={18} 
+                            className={`text-gray-400 transition-transform duration-200 ${
+                              expandedCategories.includes('sensors') ? 'rotate-180 text-gray-700' : ''
+                            }`} 
+                          />
+                        </div>
+                      </button>
+
+                      {expandedCategories.includes('sensors') && (
+                        <div className="p-4 sm:p-5 pt-1 sm:pt-2 border-t border-gray-100 animate-fade-in">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                            <CounterInput 
+                              label="Widelux"
+                              sublabel="Sensor de movimento e luminosidade"
+                              value={inputs.counts[DeviceType.SENSOR_WIDELUX]} 
+                              onChange={(v) => handleCountChange(DeviceType.SENSOR_WIDELUX, v)}
+                            />
+                            <CounterInput 
+                              label="X-Ray"
+                              sublabel="Sensor de temperatura e qualidade do ar"
+                              value={inputs.counts[DeviceType.SENSOR_XRAY]} 
+                              onChange={(v) => handleCountChange(DeviceType.SENSOR_XRAY, v)}
+                            />
+                            <CounterInput 
+                              label="Nano"
+                              sublabel="Sensor de movimento simples"
+                              value={inputs.counts[DeviceType.SENSOR_NANO]} 
+                              onChange={(v) => handleCountChange(DeviceType.SENSOR_NANO, v)}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {error && (
@@ -1031,41 +1183,81 @@ const App: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Barra inferior fixa / de ação */}
-                  <div className="sticky bottom-4 z-10 pt-2">
-                    <div className="bg-white/95 backdrop-blur-md p-3 sm:p-4 rounded-xl border border-gray-200 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${
-                          totalDevices > 0 ? 'bg-neutral-900 text-white' : 'bg-gray-100 text-gray-400'
+                  {/* Barra inferior fixa (como o header) com Mini-Resumo */}
+                  <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] print:hidden">
+                    <div className="mx-auto px-2 sm:px-4 py-2.5 sm:py-3 flex flex-col md:flex-row items-center justify-between gap-3 max-w-[98%] 2xl:max-w-[1920px]">
+                      <div className="flex items-center gap-3 w-full md:w-auto min-w-0">
+                        <div className={`w-9 h-9 shrink-0 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${
+                          totalDevices > 0 ? 'bg-[#746554] text-white shadow-2xs' : 'bg-gray-100 text-gray-400'
                         }`}>
                           {totalDevices}
                         </div>
-                        <div>
-                          <div className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                            <span>
-                              {totalDevices === 0 ? 'Nenhum dispositivo adicionado' : `${totalDevices} ${totalDevices === 1 ? 'dispositivo configurado' : 'dispositivos configurados'}`}
+                        
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold text-gray-900 leading-none">
+                              {totalDevices === 0 
+                                ? 'Nenhum dispositivo adicionado' 
+                                : `${totalDevices} ${totalDevices === 1 ? 'dispositivo configurado' : 'dispositivos configurados'}`}
                             </span>
                             {totalDevices > 0 && (
                               <button
                                 type="button"
                                 onClick={handleClearAll}
-                                className="text-xs text-gray-400 hover:text-red-600 transition-colors flex items-center gap-1 cursor-pointer font-normal ml-1"
+                                className="text-xs text-gray-400 hover:text-red-600 transition-colors inline-flex items-center gap-1 cursor-pointer font-normal"
                                 title="Limpar todos os campos"
                               >
                                 <RotateCcw size={12} /> Limpar
                               </button>
                             )}
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {totalDevices === 0 ? 'Adicione dispositivos acima para calcular o hardware' : 'Pronto para calcular processadores, fontes e barramentos'}
-                          </div>
+
+                          {/* Mini-resumo de categorias ativas */}
+                          {totalDevices > 0 ? (
+                            <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                              {lightingCount > 0 && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-900 border border-amber-200/80">
+                                  <Lightbulb size={12} className="text-amber-600 shrink-0" />
+                                  <span>{lightingCount} iluminação</span>
+                                </span>
+                              )}
+                              {shadeCount > 0 && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-blue-50 text-blue-900 border border-blue-200/80">
+                                  <Blinds size={12} className="text-blue-600 shrink-0" />
+                                  <span>{shadeCount} {shadeCount === 1 ? 'persiana' : 'persianas'}</span>
+                                </span>
+                              )}
+                              {climateCount > 0 && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-red-50 text-red-900 border border-red-200/80">
+                                  <Thermometer size={12} className="text-red-600 shrink-0" />
+                                  <span>{climateCount} {climateCount === 1 ? 'zona clim.' : 'zonas clim.'}</span>
+                                </span>
+                              )}
+                              {keypadCount > 0 && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#746554]/10 text-[#746554] border border-[#746554]/25">
+                                  <Grid3x3 size={12} className="text-[#746554] shrink-0" />
+                                  <span>{keypadCount} {keypadCount === 1 ? 'teclado' : 'teclados'}</span>
+                                </span>
+                              )}
+                              {sensorCount > 0 && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-purple-50 text-purple-900 border border-purple-200/80">
+                                  <Radar size={12} className="text-purple-600 shrink-0" />
+                                  <span>{sensorCount} {sensorCount === 1 ? 'sensor' : 'sensores'}</span>
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-gray-500 mt-0.5">
+                              Adicione circuitos e dispositivos acima para calcular o hardware
+                            </div>
+                          )}
                         </div>
                       </div>
 
                       <button
                         type="submit"
                         disabled={loading || totalDevices === 0}
-                        className="w-full sm:w-auto px-6 py-3 bg-neutral-900 hover:bg-neutral-800 active:scale-98 text-white font-semibold rounded-lg shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-neutral-900 flex items-center justify-center gap-2 cursor-pointer text-sm"
+                        className="w-full md:w-auto px-6 py-2.5 sm:py-3 bg-[#746554] hover:bg-[#635647] active:scale-98 text-white font-semibold rounded-lg shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#746554] flex items-center justify-center gap-2 cursor-pointer text-sm shrink-0"
                       >
                         {loading ? (
                           <>

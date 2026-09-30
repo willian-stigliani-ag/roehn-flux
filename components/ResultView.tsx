@@ -1,26 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SpecificationResult, BomItem } from '../types';
-import { FileText, CheckCircle2, Package, Cpu, Lightbulb, Blinds, Thermometer, Download, Zap, Network, Hash, Grid3x3, Radar, EthernetPort, Pencil, AlertTriangle, RefreshCcw } from 'lucide-react';
+import { FileText, CheckCircle2, Package, Cpu, Lightbulb, Blinds, Thermometer, Download, Zap, Network, Hash, Grid3x3, Radar, EthernetPort, Pencil, AlertTriangle, RefreshCcw, Radio, Copy, Check } from 'lucide-react';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 
 interface ResultViewProps {
   data: SpecificationResult;
   projectName: string;
+  integratorName?: string;
   onReset: () => void; // Used for "Edit Scope"
   onNewProject: () => void; // Used for "New Specification"
   showReasoning: boolean;
 }
 
-const CategoryIcon: React.FC<{ category: string }> = ({ category }) => {
+const CategoryIcon: React.FC<{ category: string; sku?: string }> = ({ category, sku }) => {
+  if (sku?.startsWith('RRM')) return <Radio className="text-indigo-600" size={16} />;
   switch (category) {
-    case 'Controller': return <Cpu className="text-purple-600" />;
-    case 'Lighting': return <Lightbulb className="text-yellow-600" />;
-    case 'Shading': return <Blinds className="text-blue-600" />;
-    case 'Climate': return <Thermometer className="text-red-600" />;
-    case 'User Interface': return <Grid3x3 className="text-cyan-600" />;
-    case 'Sensors': return <Radar className="text-orange-600" />;
-    default: return <Package className="text-gray-600" />;
+    case 'Controller': return <Cpu className="text-purple-600" size={16} />;
+    case 'Lighting': return <Lightbulb className="text-yellow-600" size={16} />;
+    case 'Shading': return <Blinds className="text-blue-600" size={16} />;
+    case 'Climate': return <Thermometer className="text-red-600" size={16} />;
+    case 'User Interface': return <Grid3x3 className="text-cyan-600" size={16} />;
+    case 'Sensors': return <Radar className="text-orange-600" size={16} />;
+    default: return <Package className="text-gray-600" size={16} />;
   }
 };
 
@@ -44,7 +46,80 @@ const CATEGORY_NAMES: Record<string, string> = {
     'Accessory': 'Acessórios'
 };
 
-export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, onReset, onNewProject, showReasoning }) => {
+const isPowerOrHub = (item: BomItem): boolean => {
+  const sku = item.sku.toUpperCase();
+  return sku.includes('PWR') || sku.includes('HUB') || sku.includes('FONTE');
+};
+
+const getCategoryLabel = (item: BomItem): string => {
+  if (isPowerOrHub(item)) return 'Acessório / Alimentação';
+  if (item.sku.startsWith('RRM')) return 'Módulo Remoto (RRM)';
+  if (item.sku.startsWith('RDP')) return 'Trilho DIN (RDP)';
+  return CATEGORY_NAMES[item.category] || item.category;
+};
+
+interface LogicalGroupConfig {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+}
+
+const getLogicalGroup = (item: BomItem): string => {
+  // Fontes e hubs se enquadram na categoria de acessórios, mesmo que tenham o prefixo RDP
+  if (isPowerOrHub(item)) return 'accessories';
+  if (item.category === 'User Interface') return 'keypads';
+  if (item.category === 'Sensors') return 'sensors';
+  if (item.sku.startsWith('RRM')) return 'remote_modules';
+  if (
+    item.sku.startsWith('RDP') ||
+    item.category === 'Controller' ||
+    item.category === 'Lighting' ||
+    item.category === 'Shading' ||
+    item.category === 'Climate'
+  ) {
+    return 'central_modules';
+  }
+  return 'accessories';
+};
+
+const LOGICAL_GROUPS: Record<string, LogicalGroupConfig> = {
+  central_modules: {
+    id: 'central_modules',
+    title: 'Módulos centrais',
+    subtitle: 'Processadores, dimmers, relés e gateways para trilho DIN',
+    icon: <Cpu size={16} className="text-[#746554]" />
+  },
+  remote_modules: {
+    id: 'remote_modules',
+    title: 'Módulos remotos',
+    subtitle: 'Emissores infravermelho e gateways remotos de cortinas sem fio',
+    icon: <Radio size={16} className="text-[#746554]" />
+  },
+  keypads: {
+    id: 'keypads',
+    title: 'Keypads',
+    subtitle: 'Teclados de parede, keypads e pulsadores de comando',
+    icon: <Grid3x3 size={16} className="text-[#746554]" />
+  },
+  sensors: {
+    id: 'sensors',
+    title: 'Sensores',
+    subtitle: 'Sensores de presença, luminosidade, qualidade do ar e movimento',
+    icon: <Radar size={16} className="text-[#746554]" />
+  },
+  accessories: {
+    id: 'accessories',
+    title: 'Acessórios',
+    subtitle: 'Fontes de alimentação, hubs de rede, antenas receptoras e periféricos',
+    icon: <Package size={16} className="text-[#746554]" />
+  }
+};
+
+const GROUP_ORDER = ['central_modules', 'remote_modules', 'keypads', 'sensors', 'accessories'];
+
+export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, integratorName, onReset, onNewProject, showReasoning }) => {
+  const [copied, setCopied] = useState(false);
   
   const sortedItems = [...data.items].sort((a, b) => {
     const indexA = CATEGORY_ORDER.indexOf(a.category);
@@ -53,6 +128,17 @@ export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, onRes
     const safeIndexB = indexB === -1 ? 999 : indexB;
     return safeIndexA - safeIndexB;
   });
+
+  const groupedItems = GROUP_ORDER.map(groupId => {
+    const groupConfig = LOGICAL_GROUPS[groupId];
+    const items = sortedItems.filter(item => getLogicalGroup(item) === groupId);
+    const totalQty = items.reduce((sum, i) => sum + i.quantity, 0);
+    return {
+      ...groupConfig,
+      items,
+      totalQty
+    };
+  }).filter(g => g.items.length > 0);
 
   const handleDownloadPdf = () => {
     const element = document.getElementById('pdf-content');
@@ -73,19 +159,84 @@ export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, onRes
     html2pdf().set(opt).from(element).save();
   };
 
+  const handleCopyWhatsApp = async () => {
+    const lines: string[] = [];
+
+    // Cabeçalho com identificação do projeto e integrador (sem emojis)
+    lines.push('ROEHN FLUX - LISTA DE MATERIAIS');
+    lines.push(`Projeto: ${projectName || '-'}`);
+    lines.push(`Integrador: ${integratorName || '-'}`);
+    lines.push(`Data: ${new Date().toLocaleDateString('pt-BR')}`);
+    lines.push('');
+
+    // Cálculo dinâmico para garantir espaçamento e alinhamento regular entre colunas
+    const codWidth = Math.max(3, ...data.items.map(i => String(i.code || '-').length));
+    const modelWidth = Math.max(6, ...data.items.map(i => String(i.sku || '').length));
+    const qtdWidth = Math.max(3, ...data.items.map(i => String(i.quantity).length));
+
+    const headerCod = 'COD'.padEnd(codWidth);
+    const headerModel = 'MODELO'.padEnd(modelWidth);
+    const headerQtd = 'QTD'.padEnd(qtdWidth);
+    const headerLine = `${headerCod} | ${headerModel} | ${headerQtd} | Descrição`;
+
+    groupedItems.forEach(group => {
+      lines.push(`[${group.title.toUpperCase()}]`);
+      lines.push(headerLine);
+      group.items.forEach(item => {
+        const colCod = String(item.code || '-').padEnd(codWidth);
+        const colModel = String(item.sku || '').padEnd(modelWidth);
+        const colQtd = String(item.quantity).padEnd(qtdWidth);
+        lines.push(`${colCod} | ${colModel} | ${colQtd} | ${item.description}`);
+        if (showReasoning && item.reasoning) {
+          lines.push(`   Obs: ${item.reasoning}`);
+        }
+      });
+      lines.push('');
+    });
+
+    // Aviso de responsabilidade técnica ao final (sem emojis)
+    lines.push('AVISO DE RESPONSABILIDADE TÉCNICA:');
+    lines.push(
+      'Esta especificação é gerada automaticamente com base em padrões de engenharia. Revise esta lista de materiais para garantir atendimento a todos os requisitos técnicos do projeto antes da aquisição ou instalação.'
+    );
+
+    const fullText = lines.join('\n');
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(fullText);
+      } else {
+        throw new Error('Clipboard API indisponível');
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // Fallback
+      const textArea = document.createElement('textarea');
+      textArea.value = fullText;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
   return (
-    <div className="space-y-8 animate-fade-in relative">
+    <div className="space-y-4 pb-24 sm:pb-20 animate-fade-in relative">
       {/* PDF Content (Hidden on Screen but rendered for PDF generation) */}
       <div id="pdf-content" className="absolute left-[-9999px] top-0 w-[210mm] bg-white text-black p-8 font-sans">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-300 pb-6 mb-8">
           <div className="flex items-center gap-3">
-            <div className="bg-brand-600 p-2 rounded-lg text-white">
+            <div className="bg-[#746554] p-2 rounded-lg text-white">
               <Zap size={24} fill="currentColor" />
             </div>
             <div>
               <h1 className="font-bold text-2xl text-gray-900 tracking-tight leading-none">ROEHN Flux</h1>
-              <span className="text-gray-500 text-sm font-light">Ferramenta de Especificação</span>
             </div>
           </div>
           <div className="text-right">
@@ -95,9 +246,20 @@ export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, onRes
         </div>
 
         {/* Project Info */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">{projectName || 'Projeto Sem Nome'}</h2>
-          <p className="text-gray-600 text-sm">Especificação técnica gerada automaticamente.</p>
+          <p className="text-gray-600 text-sm">
+            {integratorName ? `Integrador: ${integratorName} • ` : ''}Especificação técnica gerada automaticamente.
+          </p>
+        </div>
+
+        {/* Aviso de Responsabilidade Técnica (Topo) */}
+        <div className="text-[10px] text-gray-600 bg-gray-50 border border-gray-300 rounded p-3 mb-6">
+          <p className="font-bold text-gray-900 mb-0.5">Aviso de Responsabilidade Técnica</p>
+          <p className="leading-relaxed">
+            Esta especificação é gerada automaticamente com base em padrões e boas práticas de engenharia conhecidas. 
+            Recomendamos enfaticamente que revise detalhadamente esta lista de materiais para garantir que ela atenda a todos os requisitos técnicos, físicos e normativos do projeto específico antes da aquisição ou instalação.
+          </p>
         </div>
 
         {/* Scope Summary */}
@@ -164,10 +326,11 @@ export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, onRes
 
         {/* BOM Table */}
         <div className="mb-8">
-          <h3 className="font-bold text-lg text-gray-900 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
-            <FileText size={20} className="text-gray-400" />
-            Lista de Materiais
-          </h3>
+          <div className="border-b border-gray-300 pb-2 mb-4">
+            <h3 className="font-bold text-lg text-gray-900">
+              Lista de Materiais
+            </h3>
+          </div>
           
           {data.addressStats.consumed > 250 ? (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
@@ -190,156 +353,178 @@ export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, onRes
                </p>
             </div>
           ) : (
-            <table className="w-full text-xs border-collapse">
-              <thead>
-                <tr className="border-b-2 border-gray-800 text-gray-600">
-                  <th className="text-left py-2 font-bold uppercase tracking-wider w-1/4">Modelo</th>
-                  <th className="text-center py-2 font-bold uppercase tracking-wider w-16">Qtd</th>
-                  <th className="text-left py-2 font-bold uppercase tracking-wider">Descrição</th>
-                  {showReasoning && <th className="text-left py-2 font-bold uppercase tracking-wider w-1/3">Observações</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {sortedItems.map((item, idx) => (
-                  <tr key={idx} className="break-inside-avoid">
-                    <td className="py-3 pr-4 align-top font-bold text-gray-900">
-                      {item.sku}
-                      <div className="text-[10px] font-normal text-gray-500 mt-1">{CATEGORY_NAMES[item.category]}</div>
-                    </td>
-                    <td className="py-3 px-2 align-top text-center font-bold text-gray-900">
-                      {item.quantity}
-                    </td>
-                    <td className="py-3 px-4 align-top text-gray-700">
-                      {item.description}
-                    </td>
-                    {showReasoning && (
-                      <td className="py-3 pl-4 align-top text-gray-500 italic">
-                        {item.reasoning}
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        {/* Disclaimer */}
-        <div className="text-[10px] text-gray-500 border-t border-gray-200 pt-4 mt-auto">
-          <div className="flex items-start gap-2">
-            <AlertTriangle size={12} className="mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-bold mb-1">Aviso de Responsabilidade Técnica</p>
-              <p className="leading-relaxed">
-                Esta especificação é gerada automaticamente com base em padrões e boas práticas de engenharia conhecidas. 
-                Recomendamos enfaticamente que revise detalhadamente esta lista de materiais para garantir que ela atenda a todos os requisitos técnicos, físicos e normativos do projeto específico antes da aquisição ou instalação.
-              </p>
+            <div className="space-y-6">
+              {groupedItems.map(group => (
+                <div key={group.id} className="break-inside-avoid">
+                  <div className="bg-gray-100 px-3 py-1.5 border border-gray-300 rounded-t font-bold text-xs text-gray-800 uppercase tracking-wider">
+                    <span>{group.title}</span>
+                  </div>
+                  <table className="w-full text-xs border-x border-b border-gray-300 border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-300 bg-gray-50 text-gray-600">
+                        <th className="text-left py-2 px-3 font-bold uppercase tracking-wider w-16 whitespace-nowrap">Código</th>
+                        <th className="text-left py-2 px-3 font-bold uppercase tracking-wider w-24 whitespace-nowrap">Modelo</th>
+                        <th className="text-center py-2 px-2 font-bold uppercase tracking-wider w-12 whitespace-nowrap">Qtd</th>
+                        <th className="text-left py-2 px-3 font-bold uppercase tracking-wider">Descrição</th>
+                        {showReasoning && <th className="text-left py-2 px-3 font-bold uppercase tracking-wider w-1/3">Observações</th>}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {group.items.map((item, idx) => (
+                        <tr key={idx} className="break-inside-avoid">
+                          <td className="py-2.5 px-3 align-top font-medium text-gray-600">
+                            {item.code || '-'}
+                          </td>
+                          <td className="py-2.5 px-3 align-top font-bold text-gray-900">
+                            {item.sku}
+                          </td>
+                          <td className="py-2.5 px-2 align-top text-center font-bold text-gray-900">
+                            {item.quantity}
+                          </td>
+                          <td className="py-2.5 px-3 align-top text-gray-700">
+                            {item.description}
+                          </td>
+                          {showReasoning && (
+                            <td className="py-2.5 px-3 align-top text-gray-700">
+                              {item.reasoning}
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
             </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Screen Content (Visible) */}
-      <div id="screen-content" className="space-y-8">
-        <div className="bg-gradient-to-r from-brand-600 to-brand-800 text-white rounded-2xl p-6 shadow-xl print:hidden">
-          <div className="flex items-start gap-4">
-            <CheckCircle2 className="w-8 h-8 flex-shrink-0 text-brand-200 print:text-black" />
-            <div className="flex-1 w-full">
-              <h2 className="text-2xl font-bold mb-2">Especificação Gerada</h2>
-              <p className="text-brand-100 leading-relaxed max-w-2xl mb-6 print:text-gray-600">
-                Especificação gerada de acordo com o escopo abaixo:
-              </p>
-              
-              <div className="space-y-4">
-                {/* Project Scope Section */}
-                <div className="bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10 print:bg-gray-50 print:border-gray-200">
-                  <h4 className="text-xs text-brand-200 uppercase tracking-widest font-semibold mb-3 print:text-gray-500">Escopo do Projeto</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div className="flex flex-col items-start gap-1 p-2 bg-white/5 rounded-lg border border-white/5 print:border-gray-200 print:bg-white">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Lightbulb size={16} className="text-yellow-200 print:text-yellow-600" />
-                            <span className="text-xs text-brand-100 uppercase tracking-wide font-medium print:text-gray-600">Iluminação</span>
-                        </div>
-                        <div className="font-bold text-lg">{data.categoryCounts.lighting}</div>
-                    </div>
-                    <div className="flex flex-col items-start gap-1 p-2 bg-white/5 rounded-lg border border-white/5 print:border-gray-200 print:bg-white">
-                        <div className="flex items-center gap-2 mb-1">
-                             <Blinds size={16} className="text-blue-200 print:text-blue-600" />
-                            <span className="text-xs text-brand-100 uppercase tracking-wide font-medium print:text-gray-600">Persianas</span>
-                        </div>
-                        <div className="font-bold text-lg">{data.categoryCounts.shading}</div>
-                    </div>
-                    <div className="flex flex-col items-start gap-1 p-2 bg-white/5 rounded-lg border border-white/5 print:border-gray-200 print:bg-white">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Thermometer size={16} className="text-red-200 print:text-red-600" />
-                            <span className="text-xs text-brand-100 uppercase tracking-wide font-medium print:text-gray-600">Climatização</span>
-                        </div>
-                        <div className="font-bold text-lg">{data.categoryCounts.climate}</div>
-                    </div>
-                     <div className="flex flex-col items-start gap-1 p-2 bg-white/5 rounded-lg border border-white/5 print:border-gray-200 print:bg-white">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Grid3x3 size={16} className="text-cyan-200 print:text-cyan-600" />
-                            <span className="text-xs text-brand-100 uppercase tracking-wide font-medium print:text-gray-600">Keypads</span>
-                        </div>
-                        <div className="font-bold text-lg">{data.categoryCounts.keypads}</div>
-                    </div>
-                     <div className="flex flex-col items-start gap-1 p-2 bg-white/5 rounded-lg border border-white/5 print:border-gray-200 print:bg-white">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Radar size={16} className="text-orange-200 print:text-orange-600" />
-                            <span className="text-xs text-brand-100 uppercase tracking-wide font-medium print:text-gray-600">Sensores</span>
-                        </div>
-                        <div className="font-bold text-lg">{data.categoryCounts.sensors}</div>
+      <div id="screen-content" className="space-y-3.5">
+        {/* Aviso de Responsabilidade Técnica (Topo da Página - Compacto) */}
+        <div id="disclaimer-content" className="bg-amber-50/90 border border-amber-200/90 rounded-lg px-3.5 py-2 text-xs text-amber-900 flex items-center gap-2.5 shadow-2xs">
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+          <div className="leading-snug">
+            <span className="font-semibold text-amber-950 mr-1">Aviso de Responsabilidade Técnica:</span>
+            <span className="text-amber-900/85">
+              Especificação gerada automaticamente com base em padrões de engenharia. Revise esta lista de materiais para garantir atendimento a todos os requisitos técnicos do projeto antes da aquisição ou instalação.
+            </span>
+          </div>
+        </div>
+
+        {/* Card Resumo de Especificação Gerada (Compacto) */}
+        <div className="bg-gradient-to-r from-brand-600 to-brand-800 text-white rounded-xl p-3.5 sm:p-4 shadow-sm print:hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <CheckCircle2 className="w-5 h-5 text-brand-200 shrink-0" />
+              <h2 className="text-base sm:text-lg font-bold leading-tight">
+                Resumo Técnico do Projeto
+              </h2>
+              {projectName && (
+                <span className="text-xs text-brand-200/90 font-normal">
+                  • Projeto: <strong className="font-semibold text-white">{projectName}</strong>
+                </span>
+              )}
+              {integratorName && (
+                <span className="text-xs text-brand-200/90 font-normal">
+                  • Integrador: <strong className="font-semibold text-white">{integratorName}</strong>
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-9 gap-2.5">
+            {/* Escopo do Projeto */}
+            <div className="lg:col-span-5 bg-white/10 p-2 sm:p-2.5 rounded-lg border border-white/10 backdrop-blur-sm flex flex-col justify-between">
+              <div className="text-[10px] text-brand-200 uppercase tracking-wider font-semibold mb-1.5">
+                Escopo do Projeto
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5">
+                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Lightbulb size={15} className="text-yellow-200 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Ilum.</div>
+                    <div className="font-bold text-xs sm:text-sm text-white truncate">{data.categoryCounts.lighting}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Blinds size={15} className="text-blue-200 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Pers.</div>
+                    <div className="font-bold text-xs sm:text-sm text-white truncate">{data.categoryCounts.shading}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Thermometer size={15} className="text-red-200 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Clima</div>
+                    <div className="font-bold text-xs sm:text-sm text-white truncate">{data.categoryCounts.climate}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Grid3x3 size={15} className="text-cyan-200 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Keypads</div>
+                    <div className="font-bold text-xs sm:text-sm text-white truncate">{data.categoryCounts.keypads}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Radar size={15} className="text-orange-200 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Sensores</div>
+                    <div className="font-bold text-xs sm:text-sm text-white truncate">{data.categoryCounts.sensors}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recursos do Sistema */}
+            <div className="lg:col-span-4 bg-white/10 p-2 sm:p-2.5 rounded-lg border border-white/10 backdrop-blur-sm flex flex-col justify-between">
+              <div className="text-[10px] text-brand-200 uppercase tracking-wider font-semibold mb-1.5">
+                Recursos do Sistema
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Zap size={15} className="text-amber-200 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Energia L</div>
+                    <div className={`font-bold text-xs sm:text-sm truncate ${data.powerStats.busLPower.consumed > data.powerStats.busLPower.supplied ? 'text-red-400' : 'text-white'}`}>
+                      {data.powerStats.busLPower.consumed.toFixed(1)} <span className="text-[10px] font-normal text-brand-200">/ {data.powerStats.busLPower.supplied.toFixed(1)}</span>
                     </div>
                   </div>
                 </div>
-  
-                {/* System Resources Section */}
-                <div className="bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10 print:bg-gray-50 print:border-gray-200">
-                  <h4 className="text-xs text-brand-200 uppercase tracking-widest font-semibold mb-3 print:text-gray-500">Recursos do Sistema</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-amber-500/20 rounded-lg print:bg-amber-100">
-                            <Zap size={20} className="text-amber-200 print:text-amber-600" />
-                        </div>
-                        <div>
-                            <div className="text-xs text-brand-100 uppercase tracking-wide font-medium print:text-gray-600">ENERGIA MÓDULOS</div>
-                            <div className={`font-bold text-xl ${data.powerStats.busLPower.consumed > data.powerStats.busLPower.supplied ? 'text-red-400' : ''}`}>
-                                {data.powerStats.busLPower.consumed.toFixed(1)} <span className={`text-sm font-normal ${data.powerStats.busLPower.consumed > data.powerStats.busLPower.supplied ? 'text-red-300' : 'text-brand-200'} print:text-gray-500`}>/ {data.powerStats.busLPower.supplied.toFixed(1)}</span>
-                            </div>
-                        </div>
+
+                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Network size={15} className="text-emerald-200 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Energia RNET</div>
+                    <div className={`font-bold text-xs sm:text-sm truncate ${data.powerStats.nPower.consumed > data.powerStats.nPower.supplied ? 'text-red-400' : 'text-white'}`}>
+                      {data.powerStats.nPower.consumed.toFixed(1)} <span className="text-[10px] font-normal text-brand-200">/ {data.powerStats.nPower.supplied.toFixed(1)}</span>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-emerald-500/20 rounded-lg print:bg-emerald-100">
-                            <Network size={20} className="text-emerald-200 print:text-emerald-600" />
-                        </div>
-                        <div>
-                            <div className="text-xs text-brand-100 uppercase tracking-wide font-medium print:text-gray-600">ENERGIA RNET</div>
-                            <div className={`font-bold text-xl ${data.powerStats.nPower.consumed > data.powerStats.nPower.supplied ? 'text-red-400' : ''}`}>
-                                {data.powerStats.nPower.consumed.toFixed(1)} <span className={`text-sm font-normal ${data.powerStats.nPower.consumed > data.powerStats.nPower.supplied ? 'text-red-300' : 'text-brand-200'} print:text-gray-500`}>/ {data.powerStats.nPower.supplied.toFixed(1)}</span>
-                            </div>
-                        </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Hash size={15} className="text-purple-200 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Endereços</div>
+                    <div className={`font-bold text-xs sm:text-sm truncate ${data.addressStats.consumed > data.addressStats.supplied ? 'text-red-400' : 'text-white'}`}>
+                      {data.addressStats.consumed} <span className="text-[10px] font-normal text-brand-200">/ {data.addressStats.supplied}</span>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-purple-500/20 rounded-lg print:bg-purple-100">
-                            <Hash size={20} className="text-purple-200 print:text-purple-600" />
-                        </div>
-                        <div>
-                            <div className="text-xs text-brand-100 uppercase tracking-wide font-medium print:text-gray-600">ENDEREÇOS RNET</div>
-                            <div className={`font-bold text-xl ${data.addressStats.consumed > data.addressStats.supplied ? 'text-red-400' : ''}`}>
-                                {data.addressStats.consumed} <span className={`text-sm font-normal ${data.addressStats.consumed > data.addressStats.supplied ? 'text-red-300' : 'text-brand-200'} print:text-gray-500`}>/ {data.addressStats.supplied}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-500/20 rounded-lg print:bg-blue-100">
-                            <EthernetPort size={20} className="text-blue-200 print:text-blue-600" />
-                        </div>
-                        <div>
-                            <div className="text-xs text-brand-100 uppercase tracking-wide font-medium print:text-gray-600">PORTAS PNET</div>
-                            <div className={`font-bold text-xl ${data.pnetStats.consumed > data.pnetStats.supplied ? 'text-red-400' : ''}`}>
-                                {data.pnetStats.consumed} <span className={`text-sm font-normal ${data.pnetStats.consumed > data.pnetStats.supplied ? 'text-red-300' : 'text-brand-200'} print:text-gray-500`}>/ {data.pnetStats.supplied}</span>
-                            </div>
-                        </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <EthernetPort size={15} className="text-blue-200 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Portas PNET</div>
+                    <div className={`font-bold text-xs sm:text-sm truncate ${data.pnetStats.consumed > data.pnetStats.supplied ? 'text-red-400' : 'text-white'}`}>
+                      {data.pnetStats.consumed} <span className="text-[10px] font-normal text-brand-200">/ {data.pnetStats.supplied}</span>
                     </div>
                   </div>
                 </div>
@@ -395,103 +580,119 @@ export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, onRes
         ) : (
           <>
             <div id="bom-content" className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                  <FileText size={18} />
+              <div className="p-4 sm:p-5 border-b border-gray-200 bg-gray-50/80">
+                <h3 className="font-bold text-gray-900 text-base">
                   Lista de Materiais
                 </h3>
-                <button 
-                  onClick={onReset}
-                  data-html2canvas-ignore="true"
-                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-brand-600 px-3 py-1 rounded-md hover:bg-white border border-transparent hover:border-gray-200 transition-all print:hidden"
-                >
-                  <Pencil size={16} />
-                  Editar escopo
-                </button>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Organizada por módulos de central, interfaces de campo e periféricos
+                </p>
               </div>
               
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-gray-50 text-gray-500 uppercase font-medium border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-3">Modelo</th>
-                      <th className="px-6 py-3 text-center">Qtd</th>
-                      <th className="px-6 py-3">Descrição</th>
-                      {showReasoning && <th className="px-6 py-3">Observações</th>}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {sortedItems.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap align-top">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0" title={CATEGORY_NAMES[item.category] || item.category}>
-                              <CategoryIcon category={item.category} />
-                            </div>
-                            <div className="font-bold text-gray-900">{item.sku}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-center align-top">
-                          <span className="inline-block bg-brand-100 text-brand-800 font-bold px-3 py-1 rounded-full">
-                            {item.quantity}
-                          </span>
-                        </td>
-                         <td className="px-6 py-4 text-gray-600 align-top">
-                          {item.description}
-                        </td>
-                        {showReasoning && (
-                          <td className="px-6 py-4 text-gray-500 text-xs leading-relaxed max-w-sm align-top">
-                               {item.reasoning && (
-                                  <div className="flex flex-col gap-1">
-                                      <ul className="list-disc list-outside ml-4 space-y-1">
-                                          {item.reasoning.split('|').map((r, i) => (
-                                              <li key={i}>{r.trim()}</li>
-                                          ))}
-                                      </ul>
-                                  </div>
+              <div className="divide-y divide-gray-200">
+                {groupedItems.map(group => (
+                  <div key={group.id} className="p-4 sm:p-5">
+                    <div className="mb-2.5 pb-2 border-b border-gray-100">
+                      <h4 className="font-bold text-sm text-gray-900 leading-tight">
+                        {group.title}
+                      </h4>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-gray-50/70 text-gray-500 uppercase text-[11px] font-semibold tracking-wider border-b border-gray-200">
+                          <tr>
+                            <th className="px-4 py-2.5 w-20 sm:w-24 whitespace-nowrap">Código</th>
+                            <th className="px-4 py-2.5 w-28 sm:w-36 whitespace-nowrap">Modelo</th>
+                            <th className="px-3 py-2.5 text-center w-14 sm:w-16 whitespace-nowrap">Qtd</th>
+                            <th className="px-4 py-2.5">Descrição</th>
+                            {showReasoning && <th className="px-4 py-2.5 w-1/3 min-w-[220px]">Observações</th>}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {group.items.map((item, idx) => (
+                            <tr key={idx} className="hover:bg-gray-50/70 transition-colors">
+                              <td className="px-4 py-3 whitespace-nowrap align-top font-medium text-gray-600 text-sm">
+                                {item.code || '-'}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap align-top font-bold text-gray-900 text-sm">
+                                {item.sku}
+                              </td>
+                              <td className="px-3 py-3 text-center align-top font-bold text-gray-900 text-sm">
+                                {item.quantity}
+                              </td>
+                              <td className="px-4 py-3 text-gray-700 text-sm align-top leading-relaxed">
+                                {item.description}
+                              </td>
+                              {showReasoning && (
+                                <td className="px-4 py-3 text-gray-700 text-sm leading-relaxed align-top">
+                                  {item.reasoning && (
+                                    <ul className="list-disc list-outside ml-4 space-y-1 text-gray-700 text-sm">
+                                      {item.reasoning.split('|').map((r, i) => (
+                                        <li key={i}>{r.trim()}</li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                </td>
                               )}
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-  
-            <div id="disclaimer-content" className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800 flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <div className="space-y-2">
-                <p className="font-semibold">Aviso de Responsabilidade Técnica</p>
-                <p className="text-yellow-700/90 leading-relaxed">
-                  Esta especificação é gerada automaticamente com base em padrões e boas práticas de engenharia conhecidas. 
-                  No entanto, devido à complexidade e variabilidade das instalações, podem ocorrer inconsistências.
-                </p>
-                <p className="text-yellow-700/90 leading-relaxed">
-                  Recomendamos enfaticamente que revise detalhadamente esta lista de materiais para garantir que ela atenda a todos os requisitos técnicos, físicos e normativos do projeto específico antes da aquisição ou instalação.
-                </p>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </>
         )}
       </div>
 
-      <div className="flex flex-col items-center gap-4 pt-8 print:hidden">
-        <button
-          onClick={handleDownloadPdf}
-          className="w-full max-w-md bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
-        >
-          <Download size={20} />
-          Imprimir / Salvar PDF
-        </button>
+      {/* Barra inferior fixa com ações */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] print:hidden">
+        <div className="mx-auto px-2 sm:px-4 py-2.5 sm:py-3 flex flex-col sm:flex-row items-center justify-between gap-3 max-w-[98%] 2xl:max-w-[1920px]">
+          {/* Lado esquerdo: opções de editar escopo ou criar novo */}
+          <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
+            <button
+              onClick={onReset}
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-all shadow-2xs cursor-pointer active:scale-98"
+            >
+              <Pencil size={15} />
+              <span>Editar escopo</span>
+            </button>
+            <button
+              onClick={onNewProject}
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 hover:text-red-600 text-gray-700 text-sm font-semibold transition-all shadow-2xs cursor-pointer active:scale-98"
+            >
+              <RefreshCcw size={15} />
+              <span>Criar novo</span>
+            </button>
+          </div>
 
-        <button
-          onClick={onNewProject}
-          className="text-gray-500 hover:text-red-600 font-medium px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
-        >
-          <RefreshCcw size={16} />
-          Nova especificação
-        </button>
+          {/* Lado direito: opções de copiar e exportar */}
+          <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
+            <button
+              onClick={handleCopyWhatsApp}
+              className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-3 rounded-lg border text-sm font-semibold transition-all shadow-2xs cursor-pointer active:scale-98 ${
+                copied
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                  : 'bg-white hover:bg-gray-50 border-gray-300 text-gray-700'
+              }`}
+              title="Copiar lista de materiais e aviso técnico para WhatsApp"
+            >
+              {copied ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
+              <span>{copied ? 'Copiado!' : 'Copiar Texto / WhatsApp'}</span>
+            </button>
+
+            <button
+              onClick={handleDownloadPdf}
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-[#746554] hover:bg-[#635647] active:scale-98 text-white font-semibold rounded-lg shadow-sm transition-all text-sm cursor-pointer"
+            >
+              <Download size={16} />
+              <span>Exportar PDF</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
