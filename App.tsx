@@ -31,7 +31,7 @@ const INITIAL_CATALOG: Product[] = [
     channels: 0,
     suppliesLPower: 0,
     suppliesNPower: 55,
-    suppliesAddress: 250,
+    suppliesAddress: 100,
     suppliesPNETPorts: 0,
     consumesLPower: 5,
     consumesNPower: 0,
@@ -129,8 +129,25 @@ const INITIAL_CATALOG: Product[] = [
     category: 'Lighting Control', 
     type: 'PWM', 
     brand: 'ROEHN', 
-    model: 'RDP-PWM4', 
-    description: 'Módulo PWM de 4 canais para trilho DIN',
+    model: 'RDP-PWM6', 
+    description: 'Módulo PWM de 6 canais para trilho DIN',
+    channels: 6,
+    suppliesLPower: 0,
+    suppliesNPower: 0,
+    suppliesAddress: 0,
+    suppliesPNETPorts: 0,
+    consumesLPower: 0,
+    consumesNPower: 0.6,
+    consumesAddress: 1,
+    consumesPNETPorts: 0
+  },
+  { 
+    id: 2008, 
+    category: 'Lighting Control', 
+    type: 'PWM', 
+    brand: 'ROEHN', 
+    model: 'RRM-PWM4', 
+    description: 'Módulo PWM de 4 canais para instalação remota',
     channels: 4,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -436,7 +453,7 @@ const INITIAL_CATALOG: Product[] = [
   },
   // Keypads - Família ION
   { 
-    id: 6004, 
+    id: 6030, 
     category: 'Keypad', 
     type: 'ION Keypad', 
     brand: 'ROEHN', 
@@ -537,7 +554,9 @@ type ViewMode = 'integrator' | 'backoffice';
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewMode>('integrator');
-  const [catalog, setCatalog] = useState<Product[]>(INITIAL_CATALOG);
+  const [catalog, setCatalog] = useState<Product[]>(() => 
+    INITIAL_CATALOG.map(p => ({ ...p, active: p.active !== false }))
+  );
   const [showReasoning, setShowReasoning] = useState<boolean>(true);
   
   const [inputs, setInputs] = useState<ProjectInputs>(INITIAL_STATE);

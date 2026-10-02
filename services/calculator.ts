@@ -76,8 +76,11 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
   // STAGE 1: FUNCTIONAL BOM GENERATION
   // ==========================================
 
+  // Catálogo de itens ativos (itens com active === false são desconsiderados do cálculo)
+  const activeCatalog = catalog.filter(p => p.active !== false);
+
   // --- Rule 1: Mandatory Processor ---
-  const processors = catalog.filter(p => p.type === 'Processor' || p.type === 'Processador');
+  const processors = activeCatalog.filter(p => p.type === 'Processor' || p.type === 'Processador');
   if (processors.length > 0) {
     const processor = processors[0];
     items.push({
@@ -244,7 +247,7 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
     const totalLoad = group.types.reduce((sum, type) => sum + (activeCounts[type] || 0), 0);
     if (totalLoad <= 0) return;
 
-    const candidates = catalog.filter(p => 
+    const candidates = activeCatalog.filter(p => 
       p.category === group.targetCategory && 
       group.typeKeywords.some(k => 
         p.type.toLowerCase().includes(k.toLowerCase()) || 
@@ -296,7 +299,7 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
 
     const antennasNeeded = Math.ceil(finnoAirCount / 16);
 
-    const antennaProduct = catalog.find(p => 
+    const antennaProduct = activeCatalog.find(p => 
       p.model === 'RFN-AIR-RX' || 
       p.type.toLowerCase().includes('antena') ||
       p.model.toLowerCase().includes('air-rx') ||
@@ -329,21 +332,22 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
   const addressStats = calculateStats(items);
   const totalAddresses = addressStats.consumedAddr;
   
-  // Find the processor item (assuming it was added in the Mandatory Processor step)
+  // Find the processor product and item in BOM
+  const processorProduct = activeCatalog.find(cp => cp.type === 'Processor' || cp.type === 'Processador') || catalog.find(cp => cp.type === 'Processor' || cp.type === 'Processador');
   const processorItem = items.find(item => {
       const p = catalog.find(cp => cp.model === item.sku);
       return p?.type === 'Processor' || p?.type === 'Processador';
   });
 
   if (processorItem) {
-      // Rule: 1 Processor for every 100 addresses (Best Practice for performance/load)
-      // This does NOT expand the 250 address system limit.
-      const requiredProcessors = Math.max(1, Math.ceil(totalAddresses / 100));
+      // Dimensionamento baseado diretamente na capacidade de endereços inserida pela processadora RDP-M6 (suppliesAddress)
+      const addressCapPerProcessor = Math.max(1, processorProduct?.suppliesAddress || 100);
+      const requiredProcessors = Math.max(1, Math.ceil(totalAddresses / addressCapPerProcessor));
       
       processorItem.quantity = requiredProcessors;
       
       if (requiredProcessors > 1) {
-          processorItem.reasoning = 'Processadoras adicionais recomendadas por boas práticas (1 a cada 100 endereços).';
+          processorItem.reasoning = `Processadoras adicionais necessárias para suprir ${totalAddresses} endereços (${addressCapPerProcessor} endereços por processadora).`;
       }
   }
 
@@ -388,7 +392,7 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
               if (!p || p.suppliesPNETPorts > 0) continue; 
 
               // Find candidates in the same category/type that supply ports and have adequate channels
-              const candidates = catalog.filter(up => 
+              const candidates = activeCatalog.filter(up => 
                   up.category.toLowerCase() === p.category.toLowerCase() && 
                   up.type.toLowerCase() === p.type.toLowerCase() && 
                   up.suppliesPNETPorts > 0 && 
@@ -453,7 +457,7 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
   // If upgrading existing items wasn't enough (or no upgradable items existed), add new modules
   if (deficitPNET > 0) {
     // Sort to prioritize Relays (like RL8) over Dimmers (like DIM8)
-    const pnetCandidates = catalog
+    const pnetCandidates = activeCatalog
         .filter(p => p.suppliesPNETPorts > 0)
         .sort((a, b) => {
             const aType = a.type.toLowerCase();
@@ -512,7 +516,7 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
 
   if (deficitN > 0) {
       // Exclude Processors from candidates for expansion power to prefer Hubs (like RDP-HUB6)
-      const nCandidates = catalog.filter(p => p.suppliesNPower > 0 && !p.type.toLowerCase().includes('process'));
+      const nCandidates = activeCatalog.filter(p => p.suppliesNPower > 0 && !p.type.toLowerCase().includes('process'));
       
       if (nCandidates.length === 0) {
           items.push({
@@ -549,7 +553,7 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
   const totalDedPSNeeded = devicesNeedingPS.reduce((sum, item) => sum + item.quantity, 0);
 
   if (totalDedPSNeeded > 0) {
-      const psCandidates = catalog
+      const psCandidates = activeCatalog
           .filter(p => (p.type === 'Power Supply' || p.type === 'Fonte de Alimentação') && p.suppliesLPower > 0)
           .sort((a, b) => b.suppliesLPower - a.suppliesLPower);
 
@@ -604,7 +608,7 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
   let deficitL = moduleLoadL - availableGeneralL;
 
   if (deficitL > 0) {
-      const lCandidates = catalog.filter(p => p.suppliesLPower > 0);
+      const lCandidates = activeCatalog.filter(p => p.suppliesLPower > 0);
       
       if (lCandidates.length === 0) {
            items.push({

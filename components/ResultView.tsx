@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { SpecificationResult, BomItem } from '../types';
-import { FileText, CheckCircle2, Package, Cpu, Lightbulb, Blinds, Thermometer, Download, Zap, Network, Hash, Grid3x3, Radar, EthernetPort, Pencil, AlertTriangle, RefreshCcw, Radio, Copy, Check } from 'lucide-react';
-// @ts-ignore
-import html2pdf from 'html2pdf.js';
+import { FileText, CheckCircle2, Package, Cpu, Lightbulb, Blinds, Thermometer, Zap, Network, Hash, Grid3x3, Radar, EthernetPort, Pencil, AlertTriangle, RefreshCcw, Radio, Copy, Check, FileSpreadsheet } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 interface ResultViewProps {
   data: SpecificationResult;
@@ -93,7 +92,7 @@ const LOGICAL_GROUPS: Record<string, LogicalGroupConfig> = {
   remote_modules: {
     id: 'remote_modules',
     title: 'Módulos remotos',
-    subtitle: 'Emissores infravermelho e gateways remotos de cortinas sem fio',
+    subtitle: 'Módulos PWM, emissores infravermelho e gateways remotos',
     icon: <Radio size={16} className="text-[#746554]" />
   },
   keypads: {
@@ -140,26 +139,60 @@ export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, integ
     };
   }).filter(g => g.items.length > 0);
 
-  const handleDownloadPdf = () => {
-    const element = document.getElementById('pdf-content');
-    if (!element) return;
+  const handleExportExcel = () => {
+    const rows: (string | number)[][] = [];
+
+    // Cabeçalho e Identificação do Projeto
+    rows.push(['ROEHN FLUX - LISTA DE MATERIAIS']);
+    rows.push(['Projeto:', projectName || '-']);
+    rows.push(['Integrador:', integratorName || '-']);
+    rows.push(['Data da Emissão:', new Date().toLocaleDateString('pt-BR')]);
+    rows.push([]);
+
+    // Tabela da Lista de Materiais
+    rows.push(['LISTA DE MATERIAIS']);
+    rows.push(['Código', 'Modelo', 'Quantidade', 'Descrição', 'Observações Técnicas']);
+
+    groupedItems.forEach(group => {
+      group.items.forEach(item => {
+        rows.push([
+          item.code || '-',
+          item.sku,
+          item.quantity,
+          item.description,
+          item.reasoning || '-'
+        ]);
+      });
+    });
+
+    rows.push([]);
+    rows.push(['AVISO DE RESPONSABILIDADE TÉCNICA:']);
+    rows.push([
+      'Esta especificação é gerada automaticamente com base em padrões de engenharia. Revise esta lista de materiais para garantir atendimento a todos os requisitos técnicos do projeto antes da aquisição ou instalação.'
+    ]);
+
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+
+    // Definir larguras de colunas
+    worksheet['!cols'] = [
+      { wch: 14 }, // Código
+      { wch: 18 }, // Modelo
+      { wch: 14 }, // Quantidade
+      { wch: 60 }, // Descrição
+      { wch: 60 }, // Observações Técnicas
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Lista de Materiais');
 
     const dateStr = new Date().toISOString().split('T')[0];
     const safeProjectName = (projectName || 'Projeto').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    const filename = `${safeProjectName}_especificacao_roehn_flux_${dateStr}.pdf`;
+    const filename = `${safeProjectName}_especificacao_roehn_flux_${dateStr}.xlsx`;
 
-    const opt = {
-      margin:       [10, 10, 10, 10],
-      filename:     filename,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    
-    html2pdf().set(opt).from(element).save();
+    XLSX.writeFile(workbook, filename);
   };
 
-  const handleCopyWhatsApp = async () => {
+  const handleCopyText = async () => {
     const lines: string[] = [];
 
     // Cabeçalho com identificação do projeto e integrador (sem emojis)
@@ -227,179 +260,6 @@ export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, integ
 
   return (
     <div className="space-y-4 pb-24 sm:pb-20 animate-fade-in relative">
-      {/* PDF Content (Hidden on Screen but rendered for PDF generation) */}
-      <div id="pdf-content" className="absolute left-[-9999px] top-0 w-[210mm] bg-white text-black p-8 font-sans">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-300 pb-6 mb-8">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#746554] p-2 rounded-lg text-white">
-              <Zap size={24} fill="currentColor" />
-            </div>
-            <div>
-              <h1 className="font-bold text-2xl text-gray-900 tracking-tight leading-none">ROEHN Flux</h1>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs text-gray-500 uppercase tracking-wider">Data</div>
-            <div className="font-medium text-gray-900">{new Date().toLocaleDateString('pt-BR')}</div>
-          </div>
-        </div>
-
-        {/* Project Info */}
-        <div className="mb-6">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">{projectName || 'Projeto Sem Nome'}</h2>
-          <p className="text-gray-600 text-sm">
-            {integratorName ? `Integrador: ${integratorName} • ` : ''}Especificação técnica gerada automaticamente.
-          </p>
-        </div>
-
-        {/* Aviso de Responsabilidade Técnica (Topo) */}
-        <div className="text-[10px] text-gray-600 bg-gray-50 border border-gray-300 rounded p-3 mb-6">
-          <p className="font-bold text-gray-900 mb-0.5">Aviso de Responsabilidade Técnica</p>
-          <p className="leading-relaxed">
-            Esta especificação é gerada automaticamente com base em padrões e boas práticas de engenharia conhecidas. 
-            Recomendamos enfaticamente que revise detalhadamente esta lista de materiais para garantir que ela atenda a todos os requisitos técnicos, físicos e normativos do projeto específico antes da aquisição ou instalação.
-          </p>
-        </div>
-
-        {/* Scope Summary */}
-        <div className="mb-8 border border-gray-200 rounded-lg overflow-hidden">
-          <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 font-bold text-xs text-gray-500 uppercase tracking-wider">
-            Escopo do Projeto
-          </div>
-          <div className="grid grid-cols-5 divide-x divide-gray-200 bg-white">
-            <div className="p-3 text-center">
-              <div className="text-xs text-gray-500 mb-1">Iluminação</div>
-              <div className="font-bold text-lg">{data.categoryCounts.lighting}</div>
-            </div>
-            <div className="p-3 text-center">
-              <div className="text-xs text-gray-500 mb-1">Persianas</div>
-              <div className="font-bold text-lg">{data.categoryCounts.shading}</div>
-            </div>
-            <div className="p-3 text-center">
-              <div className="text-xs text-gray-500 mb-1">Climatização</div>
-              <div className="font-bold text-lg">{data.categoryCounts.climate}</div>
-            </div>
-            <div className="p-3 text-center">
-              <div className="text-xs text-gray-500 mb-1">Keypads</div>
-              <div className="font-bold text-lg">{data.categoryCounts.keypads}</div>
-            </div>
-            <div className="p-3 text-center">
-              <div className="text-xs text-gray-500 mb-1">Sensores</div>
-              <div className="font-bold text-lg">{data.categoryCounts.sensors}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Resources Summary */}
-        <div className="mb-8 border border-gray-200 rounded-lg overflow-hidden">
-          <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 font-bold text-xs text-gray-500 uppercase tracking-wider">
-            Recursos do Sistema
-          </div>
-          <div className="grid grid-cols-4 divide-x divide-gray-200 bg-white">
-            <div className="p-3">
-              <div className="text-xs text-gray-500 mb-1 uppercase">Energia Módulos</div>
-              <div className={`font-bold text-lg ${data.powerStats.busLPower.consumed > data.powerStats.busLPower.supplied ? 'text-red-600' : 'text-gray-900'}`}>
-                {data.powerStats.busLPower.consumed.toFixed(1)} <span className="text-sm font-normal text-gray-400">/ {data.powerStats.busLPower.supplied.toFixed(1)}</span>
-              </div>
-            </div>
-            <div className="p-3">
-              <div className="text-xs text-gray-500 mb-1 uppercase">Energia RNET</div>
-              <div className={`font-bold text-lg ${data.powerStats.nPower.consumed > data.powerStats.nPower.supplied ? 'text-red-600' : 'text-gray-900'}`}>
-                {data.powerStats.nPower.consumed.toFixed(1)} <span className="text-sm font-normal text-gray-400">/ {data.powerStats.nPower.supplied.toFixed(1)}</span>
-              </div>
-            </div>
-            <div className="p-3">
-              <div className="text-xs text-gray-500 mb-1 uppercase">Endereços RNET</div>
-              <div className={`font-bold text-lg ${data.addressStats.consumed > data.addressStats.supplied ? 'text-red-600' : 'text-gray-900'}`}>
-                {data.addressStats.consumed} <span className="text-sm font-normal text-gray-400">/ {data.addressStats.supplied}</span>
-              </div>
-            </div>
-            <div className="p-3">
-              <div className="text-xs text-gray-500 mb-1 uppercase">Portas PNET</div>
-              <div className={`font-bold text-lg ${data.pnetStats.consumed > data.pnetStats.supplied ? 'text-red-600' : 'text-gray-900'}`}>
-                {data.pnetStats.consumed} <span className="text-sm font-normal text-gray-400">/ {data.pnetStats.supplied}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* BOM Table */}
-        <div className="mb-8">
-          <div className="border-b border-gray-300 pb-2 mb-4">
-            <h3 className="font-bold text-lg text-gray-900">
-              Lista de Materiais
-            </h3>
-          </div>
-          
-          {data.addressStats.consumed > 250 ? (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-               <div className="flex justify-center mb-4">
-                  <AlertTriangle className="w-10 h-10 text-yellow-600" />
-               </div>
-               <h3 className="text-lg font-bold text-gray-900 mb-2">Limite de Capacidade Excedido</h3>
-               <p className="text-gray-600 text-sm">
-                  O escopo informado é maior do que as capacidades atuais desta ferramenta. Entre em contato com o Suporte Técnico ROEHN para uma cotação especializada.
-               </p>
-            </div>
-          ) : data.items.some(i => i.sku === 'ERROR-FINNO-AIR-LIMIT') ? (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-               <div className="flex justify-center mb-4">
-                  <AlertTriangle className="w-10 h-10 text-red-600" />
-               </div>
-               <h3 className="text-lg font-bold text-gray-900 mb-2">Limite de Keypads Finno Air Excedido</h3>
-               <p className="text-gray-600 text-sm">
-                  {data.items.find(i => i.sku === 'ERROR-FINNO-AIR-LIMIT')?.description}
-               </p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {groupedItems.map(group => (
-                <div key={group.id} className="break-inside-avoid">
-                  <div className="bg-gray-100 px-3 py-1.5 border border-gray-300 rounded-t font-bold text-xs text-gray-800 uppercase tracking-wider">
-                    <span>{group.title}</span>
-                  </div>
-                  <table className="w-full text-xs border-x border-b border-gray-300 border-collapse">
-                    <thead>
-                      <tr className="border-b border-gray-300 bg-gray-50 text-gray-600">
-                        <th className="text-left py-2 px-3 font-bold uppercase tracking-wider w-16 whitespace-nowrap">Código</th>
-                        <th className="text-left py-2 px-3 font-bold uppercase tracking-wider w-24 whitespace-nowrap">Modelo</th>
-                        <th className="text-center py-2 px-2 font-bold uppercase tracking-wider w-12 whitespace-nowrap">Qtd</th>
-                        <th className="text-left py-2 px-3 font-bold uppercase tracking-wider">Descrição</th>
-                        {showReasoning && <th className="text-left py-2 px-3 font-bold uppercase tracking-wider w-1/3">Observações</th>}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {group.items.map((item, idx) => (
-                        <tr key={idx} className="break-inside-avoid">
-                          <td className="py-2.5 px-3 align-top font-medium text-gray-600">
-                            {item.code || '-'}
-                          </td>
-                          <td className="py-2.5 px-3 align-top font-bold text-gray-900">
-                            {item.sku}
-                          </td>
-                          <td className="py-2.5 px-2 align-top text-center font-bold text-gray-900">
-                            {item.quantity}
-                          </td>
-                          <td className="py-2.5 px-3 align-top text-gray-700">
-                            {item.description}
-                          </td>
-                          {showReasoning && (
-                            <td className="py-2.5 px-3 align-top text-gray-700">
-                              {item.reasoning}
-                            </td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Screen Content (Visible) */}
       <div id="screen-content" className="space-y-3.5">
         {/* Aviso de Responsabilidade Técnica (Topo da Página - Compacto) */}
@@ -444,7 +304,7 @@ export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, integ
                 <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
                   <Lightbulb size={15} className="text-yellow-200 shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Ilum.</div>
+                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Iluminação</div>
                     <div className="font-bold text-xs sm:text-sm text-white truncate">{data.categoryCounts.lighting}</div>
                   </div>
                 </div>
@@ -452,7 +312,7 @@ export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, integ
                 <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
                   <Blinds size={15} className="text-blue-200 shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Pers.</div>
+                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Persianas</div>
                     <div className="font-bold text-xs sm:text-sm text-white truncate">{data.categoryCounts.shading}</div>
                   </div>
                 </div>
@@ -460,7 +320,7 @@ export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, integ
                 <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
                   <Thermometer size={15} className="text-red-200 shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Clima</div>
+                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Climatização</div>
                     <div className="font-bold text-xs sm:text-sm text-white truncate">{data.categoryCounts.climate}</div>
                   </div>
                 </div>
@@ -672,24 +532,25 @@ export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, integ
           {/* Lado direito: opções de copiar e exportar */}
           <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
             <button
-              onClick={handleCopyWhatsApp}
+              onClick={handleCopyText}
               className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-3 rounded-lg border text-sm font-semibold transition-all shadow-2xs cursor-pointer active:scale-98 ${
                 copied
                   ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
                   : 'bg-white hover:bg-gray-50 border-gray-300 text-gray-700'
               }`}
-              title="Copiar lista de materiais e aviso técnico para WhatsApp"
+              title="Copiar lista de materiais e aviso técnico"
             >
               {copied ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
-              <span>{copied ? 'Copiado!' : 'Copiar Texto / WhatsApp'}</span>
+              <span>{copied ? 'Copiado!' : 'Copiar Texto'}</span>
             </button>
 
             <button
-              onClick={handleDownloadPdf}
+              onClick={handleExportExcel}
               className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-[#746554] hover:bg-[#635647] active:scale-98 text-white font-semibold rounded-lg shadow-sm transition-all text-sm cursor-pointer"
+              title="Exportar lista de materiais para planilha Excel (.xlsx)"
             >
-              <Download size={16} />
-              <span>Exportar PDF</span>
+              <FileSpreadsheet size={16} />
+              <span>Exportar para Excel</span>
             </button>
           </div>
         </div>

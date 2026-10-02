@@ -46,6 +46,7 @@ export interface Product {
   consumesPNETPorts: number; // New: PNET Ports
   description?: string; // Optional description for AI context
   requiresDedicatedPS?: boolean; // New: Requires exclusive power supply
+  active?: boolean; // Habilita (true) ou desabilita (false) o item para consideração no cálculo
 }
 
 export interface ProjectInputs {

@@ -96,14 +96,14 @@ export const SYSTEM_RULES: SystemRule[] = [
   {
     id: 'PROC-01',
     category: 'Processadora',
-    type: 'Boas Práticas',
-    severity: 'warning',
-    title: 'Escalonamento por Boas Práticas (1 CPU a cada 100 endereços)',
-    summary: 'Recomenda 1 processadora central para cada 100 endereços RNET para balanceamento de carga.',
-    description: 'Para garantir alta velocidade de resposta, processamento ágil de rotinas e estabilidade de rede em projetos de grande porte, o sistema recomenda 1 processador a cada 100 endereços consumidos. Esta recomendação visa desempenho e não altera o teto global de 250 endereços.',
-    formula: 'Qtd Processadoras = Math.max(1, Math.ceil(TotalEndereços / 100))',
+    type: 'Dimensionamento',
+    severity: 'info',
+    title: 'Dimensionamento por Capacidade de Endereços da RDP-M6',
+    summary: 'Calcula a quantidade de processadoras com base na capacidade de endereços inserida por cada RDP-M6 (100 endereços).',
+    description: 'A quantidade de processadoras centrais é dimensionada diretamente a partir do atributo de endereços fornecidos pela RDP-M6 (suppliesAddress = 100). Havendo mais endereços demandados do que o suprido por 1 unidade, processadoras adicionais são alocadas até o limite absoluto de 250 endereços por sistema.',
+    formula: 'Qtd Processadoras = Math.max(1, Math.ceil(TotalEndereços / RDP-M6.suppliesAddress)) [Máx. 250 no sistema]',
     involvedHardware: ['RDP-M6'],
-    example: '80 endereços = 1x RDP-M6; 140 endereços = 2x RDP-M6; 220 endereços = 3x RDP-M6.'
+    example: '80 endereços = 1x RDP-M6 (suporta até 100); 140 endereços = 2x RDP-M6 (suporta até 200); 220 endereços = 3x RDP-M6 (suporta até 250).'
   },
   {
     id: 'PROC-02',
@@ -146,10 +146,10 @@ export const SYSTEM_RULES: SystemRule[] = [
     type: 'Dimensionamento',
     severity: 'info',
     title: 'Módulos PWM para Fitas LED 12V/24V',
-    summary: 'Controle de fitas LED monocromáticas, branco dinâmico ou RGB/RGBW em 4 canais.',
-    description: 'Cada módulo RDP-PWM4 comanda até 4 canais PWM. Consome 1 endereço RNET e 0.6 NPower. A alimentação de potência dos LEDs é alimentada pelas fontes externas das fitas.',
-    formula: 'Qtd Módulos PWM = Math.ceil(Canais PWM / 4)',
-    involvedHardware: ['RDP-PWM4']
+    summary: 'Controle de fitas LED monocromáticas, branco dinâmico ou RGB/RGBW em módulos centrais e remotos.',
+    description: 'Dimensionamento otimizado entre o módulo de trilho DIN RDP-PWM6 (6 canais) e o módulo remoto RRM-PWM4 (4 canais). Cada módulo consome 1 endereço RNET e 0.6 NPower.',
+    formula: 'Alocação Best-Fit entre RDP-PWM6 (6 canais) e RRM-PWM4 (4 canais)',
+    involvedHardware: ['RDP-PWM6', 'RRM-PWM4']
   },
   {
     id: 'LGT-04',

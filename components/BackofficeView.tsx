@@ -52,7 +52,6 @@ const getTypesForCategory = (cat: ProductCategory): string[] => {
       'Finno Air', 
       'Finno Pulsador', 
       'Bianni Keypad', 
-      'Bianni Pulsador', 
       'ION Keypad'
     ];
     case 'Sensor': return ['Nano', 'Widelux', 'X-Ray', 'Movimento', 'Presença', 'Lux', 'Temp'];
@@ -77,7 +76,8 @@ const DEFAULT_NEW_PRODUCT: Product = {
   consumesNPower: 1.8,
   consumesAddress: 1,
   consumesPNETPorts: 0,
-  requiresDedicatedPS: false
+  requiresDedicatedPS: false,
+  active: true
 };
 
 export const BackofficeView: React.FC<BackofficeViewProps> = ({ 
@@ -90,6 +90,7 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [activeTab, setActiveTab] = useState<'catalog' | 'rules'>('catalog');
   
   // Modal State
@@ -181,7 +182,12 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
     const matchesCategory = 
       selectedCategoryFilter === 'all' || product.category === selectedCategoryFilter;
 
-    return matchesSearch && matchesCategory;
+    const matchesStatus = 
+      selectedStatusFilter === 'all' || 
+      (selectedStatusFilter === 'active' && product.active !== false) ||
+      (selectedStatusFilter === 'inactive' && product.active === false);
+
+    return matchesSearch && matchesCategory && matchesStatus;
   });
 
   return (
@@ -274,8 +280,18 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
             <span className="text-xs text-gray-400 font-medium">Filtrar:</span>
+            <select
+              value={selectedStatusFilter}
+              onChange={(e) => setSelectedStatusFilter(e.target.value as any)}
+              className="text-xs bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-700 outline-none focus:bg-white focus:border-neutral-400 font-medium"
+            >
+              <option value="all">Status: Todos ({catalog.length})</option>
+              <option value="active">Apenas Ativos ({catalog.filter(p => p.active !== false).length})</option>
+              <option value="inactive">Apenas Inativos ({catalog.filter(p => p.active === false).length})</option>
+            </select>
+
             <select
               value={selectedCategoryFilter}
               onChange={(e) => setSelectedCategoryFilter(e.target.value)}
@@ -307,6 +323,11 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
                 {/* Fixed Column 3: Modelo (sticky horizontally with separator shadow) */}
                 <th className="sticky left-36 z-20 bg-neutral-100 px-3 py-2.5 border-b-2 border-r-2 border-gray-300 w-40 min-w-[160px] max-w-[160px] shadow-[4px_0_10px_-2px_rgba(0,0,0,0.1)]">
                   Modelo
+                </th>
+
+                {/* Status Column */}
+                <th className="bg-neutral-50 px-2.5 py-2.5 border-b-2 border-r border-gray-200 text-center w-24 min-w-[96px]">
+                  Status
                 </th>
 
                 {/* Remaining Columns (Scrollable horizontally, scrolls naturally with page) */}
@@ -362,7 +383,7 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredCatalog.map((product) => (
-                <tr key={product.id} className="group hover:bg-neutral-50/80 transition-colors">
+                <tr key={product.id} className={`group hover:bg-neutral-50/80 transition-colors ${product.active === false ? 'opacity-65 bg-gray-50/50' : ''}`}>
                   {/* Fixed Column 1: ID */}
                   <td className="sticky left-0 z-10 bg-white group-hover:bg-neutral-50 px-3 py-2.5 border-b border-r border-gray-200 font-mono text-gray-500 font-medium w-16 min-w-[64px] max-w-[64px] transition-colors">
                     {product.id}
@@ -382,6 +403,26 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
                     <span className="hover:text-neutral-600 underline decoration-dotted decoration-gray-300 underline-offset-2 hover:decoration-gray-700 transition-colors">
                       {product.model}
                     </span>
+                  </td>
+
+                  {/* Status Column */}
+                  <td className="px-2.5 py-2.5 border-b border-r border-gray-100 text-center">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onUpdateProduct({ ...product, active: product.active === false ? true : false });
+                      }}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer select-none shadow-2xs ${
+                        product.active !== false
+                          ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300/50'
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200 border border-gray-200'
+                      }`}
+                      title={product.active !== false ? 'Clique para desativar este item do cálculo' : 'Clique para ativar este item no cálculo'}
+                    >
+                      <span className={`w-2 h-2 rounded-full ${product.active !== false ? 'bg-emerald-500' : 'bg-gray-400'}`}></span>
+                      <span>{product.active !== false ? 'Ativo' : 'Inativo'}</span>
+                    </button>
                   </td>
 
                   {/* Scrollable Columns */}
@@ -641,7 +682,7 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
                   </div>
                 </div>
 
-                <div className="pt-1">
+                <div className="pt-1 space-y-2">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input 
                       type="checkbox"
@@ -654,6 +695,29 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
                       <Zap size={14} className="text-amber-500 fill-amber-500" />
                       Requer Fonte de Alimentação Dedicada (Exclusiva)
                     </span>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer select-none p-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors">
+                    <input 
+                      type="checkbox"
+                      name="active"
+                      checked={modalForm.active !== false}
+                      onChange={handleModalInputChange}
+                      className="w-4 h-4 mt-0.5 rounded border-gray-300 text-neutral-900 focus:ring-neutral-500 cursor-pointer"
+                    />
+                    <div>
+                      <span className="text-xs font-bold text-gray-900 flex items-center gap-2">
+                        Produto Ativo no Catálogo
+                        {modalForm.active !== false ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Ativo</span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-200 text-gray-600">Inativo</span>
+                        )}
+                      </span>
+                      <span className="text-[11px] text-gray-500 block mt-0.5">
+                        Quando desmarcado (Inativo), o algoritmo de cálculo desconsidera este modelo e não o seleciona para a BOM.
+                      </span>
+                    </div>
                   </label>
                 </div>
               </div>
