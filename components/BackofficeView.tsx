@@ -383,10 +383,10 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredCatalog.map((product) => (
-                <tr key={product.id} className={`group hover:bg-neutral-50/80 transition-colors ${product.active === false ? 'opacity-65 bg-gray-50/50' : ''}`}>
+                <tr key={`${product.id}-${product.model}`} className={`group hover:bg-neutral-50/80 transition-colors ${product.active === false ? 'opacity-65 bg-gray-50/50' : ''}`}>
                   {/* Fixed Column 1: ID */}
                   <td className="sticky left-0 z-10 bg-white group-hover:bg-neutral-50 px-3 py-2.5 border-b border-r border-gray-200 font-mono text-gray-500 font-medium w-16 min-w-[64px] max-w-[64px] transition-colors">
-                    {product.id}
+                    {product.id === 0 ? '0000' : product.id}
                   </td>
 
                   {/* Fixed Column 2: Marca */}

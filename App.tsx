@@ -22,7 +22,7 @@ import {
 
 const INITIAL_CATALOG: Product[] = [
   { 
-    id: 1001, 
+    id: 7988, 
     category: 'Processor', 
     type: 'Processador', 
     brand: 'ROEHN', 
@@ -40,12 +40,12 @@ const INITIAL_CATALOG: Product[] = [
     requiresDedicatedPS: true
   },
   { 
-    id: 2001, 
+    id: 7995, 
     category: 'Lighting Control', 
     type: 'Dimer', 
     brand: 'ROEHN', 
     model: 'RDP-DIM8', 
-    description: 'Módulo dimmer universal de 8 canais para trilho DIN',
+    description: 'Módulo dimmer de 8 canais',
     channels: 8,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -57,12 +57,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 2002, 
+    id: 7994, 
     category: 'Lighting Control', 
     type: 'Dimer', 
     brand: 'ROEHN', 
     model: 'RDP-DIM4', 
-    description: 'Módulo dimmer universal de 4 canais para trilho DIN',
+    description: 'Módulo dimmer de 4 canais',
     channels: 4,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -74,12 +74,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 2003, 
+    id: 8000, 
     category: 'Lighting Control', 
     type: 'Relé', 
     brand: 'ROEHN', 
     model: 'RDP-RL12', 
-    description: 'Módulo de relé de 12 canais para trilho DIN',
+    description: 'Módulo de relé de 12 canais',
     channels: 12,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -91,12 +91,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 2004, 
+    id: 7999, 
     category: 'Lighting Control', 
     type: 'Relé', 
     brand: 'ROEHN', 
     model: 'RDP-RL8', 
-    description: 'Módulo de relé de 8 canais para trilho DIN',
+    description: 'Módulo relé de 8 canais',
     channels: 8,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -108,12 +108,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 2005, 
+    id: 7998, 
     category: 'Lighting Control', 
     type: 'Relé', 
     brand: 'ROEHN', 
     model: 'RDP-RL4', 
-    description: 'Módulo de relé de 4 canais para trilho DIN',
+    description: 'Módulo relé de 4 canais',
     channels: 4,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -125,12 +125,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 2006, 
+    id: 8002, 
     category: 'Lighting Control', 
     type: 'PWM', 
     brand: 'ROEHN', 
     model: 'RDP-PWM6', 
-    description: 'Módulo PWM de 6 canais para trilho DIN',
+    description: 'Módulo PWM de 6 canais',
     channels: 6,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -142,12 +142,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 2008, 
+    id: 8028, 
     category: 'Lighting Control', 
     type: 'PWM', 
     brand: 'ROEHN', 
     model: 'RRM-PWM4', 
-    description: 'Módulo PWM de 4 canais para instalação remota',
+    description: 'Módulo PWM de 4 canais',
     channels: 4,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -159,12 +159,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 2007, 
+    id: 8001, 
     category: 'Lighting Control', 
     type: 'DALI', 
     brand: 'ROEHN', 
     model: 'RDP-DL2', 
-    description: 'Interface DALI de 2 canais para trilho DIN (128 endereços)',
+    description: 'Interface DALI de 2 canais (128 endereços)',
     channels: 128,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -176,12 +176,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 3001, 
+    id: 7997, 
     category: 'Shades Control', 
     type: 'Cabeada', 
     brand: 'ROEHN', 
     model: 'RDP-LX4', 
-    description: 'Controlador de persiana de 4 motores para trilho DIN',
+    description: 'Módulo de cortinas motorizadas de 4 canais',
     channels: 4,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -193,12 +193,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 3002, 
+    id: 7996, 
     category: 'Shades Control', 
     type: 'Cabeada', 
     brand: 'ROEHN', 
     model: 'RDP-LX2', 
-    description: 'Controlador de persiana de 2 motores para trilho DIN',
+    description: 'Módulo de cortinas motorizadas de 4 canais',
     channels: 2,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -210,12 +210,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
     { 
-    id: 3003, 
+    id: 8006, 
     category: 'Shades Control', 
     type: 'Sem Fio', 
     brand: 'ROEHN', 
     model: 'RRM-GTW', 
-    description: 'Módulo de controle de persianas RF remoto de 32 canais',
+    description: 'Módulo de cortinas RF de 32 canais',
     channels: 32,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -227,12 +227,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 4001, 
+    id: 8008, 
     category: 'HVAC Control', 
     type: 'Infravermelho', 
     brand: 'ROEHN', 
     model: 'RRM-SA1', 
-    description: 'Módulo de controle de ar-condicionado IR de canal único',
+    description: 'Módulo de controle de ar-condicionado IR',
     channels: 1,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -244,7 +244,7 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 4003, 
+    id: 8004, 
     category: 'HVAC Control', 
     type: 'VRV/VRF', 
     brand: 'ROEHN', 
@@ -261,12 +261,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 5001, 
+    id: 7992, 
     category: 'Accessory', 
     type: 'Fonte de Alimentação', 
     brand: 'ROEHN', 
     model: 'RDP-PWR60', 
-    description: 'Fonte de alimentação de 60W para montagem em trilho DIN',
+    description: 'Fonte de alimentação',
     channels: 0,
     suppliesLPower: 60,
     suppliesNPower: 0,
@@ -278,12 +278,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
     { 
-    id: 5002, 
+    id: 7990, 
     category: 'Accessory', 
     type: 'Alim. Barramento', 
     brand: 'ROEHN', 
     model: 'RDP-HUB6', 
-    description: 'Hub de Alimentação de Rede RNET (Requer fonte dedicada)',
+    description: 'Hub de alimentação',
     channels: 0,
     suppliesLPower: 0,
     suppliesNPower: 55,
@@ -296,12 +296,12 @@ const INITIAL_CATALOG: Product[] = [
     requiresDedicatedPS: true
   },
   { 
-    id: 5003, 
+    id: 8007, 
     category: 'Accessory', 
     type: 'Antena Receptora', 
     brand: 'ROEHN', 
-    model: 'RFN-AIR-RX', 
-    description: 'Antena receptora RF para keypads Finno Air (até 16 keypads por antena)',
+    model: 'RRM-AIR', 
+    description: 'Antena receptora RLink',
     channels: 16,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -314,12 +314,12 @@ const INITIAL_CATALOG: Product[] = [
   },
   // Keypads - Família QUANTICA
   { 
-    id: 6001, 
+    id: 0, 
     category: 'Keypad', 
     type: 'Quantica Keypad', 
     brand: 'ROEHN', 
     model: 'RQR-K', 
-    description: 'Teclado Série Quantica Keypad',
+    description: 'Keypad série Quantica K',
     channels: 1,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -331,12 +331,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 6002, 
+    id: 0, 
     category: 'Keypad', 
     type: 'Quantica Keypad Lite', 
     brand: 'ROEHN', 
     model: 'RQR-L', 
-    description: 'Teclado Série Quantica Keypad Lite',
+    description: 'Keypad série Quantica L',
     channels: 1,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -348,12 +348,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 6003, 
+    id: 0, 
     category: 'Keypad', 
     type: 'Quantica Pulsador', 
     brand: 'ROEHN', 
     model: 'RQR-P', 
-    description: 'Pulsador Série Quantica Pulsador',
+    description: 'Pulsador série Quantica P',
     channels: 1,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -365,12 +365,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 1
   },
   { 
-    id: 6004, 
+    id: 0, 
     category: 'Keypad', 
     type: 'Quantica Thermopad', 
     brand: 'ROEHN', 
-    model: 'RQR-TP', 
-    description: 'Thermopad - Keypad para controle de ar condicionado',
+    model: 'RQR-T2', 
+    description: 'Thermopad Quantica',
     channels: 1,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -383,12 +383,12 @@ const INITIAL_CATALOG: Product[] = [
   },
   // Keypads - Família FINNO
   { 
-    id: 6010, 
+    id: 0, 
     category: 'Keypad', 
     type: 'Finno Keypad', 
     brand: 'ROEHN', 
-    model: 'RFN-K', 
-    description: 'Teclado Série Finno Keypad',
+    model: 'RFK', 
+    description: 'Keypad série Finno K',
     channels: 1,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -400,12 +400,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 6011, 
+    id: 0, 
     category: 'Keypad', 
     type: 'Finno Air', 
     brand: 'ROEHN', 
-    model: 'RFN-AIR', 
-    description: 'Teclado Série Finno Air',
+    model: 'RFA', 
+    description: 'Keypad série Finno Air',
     channels: 1,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -413,16 +413,16 @@ const INITIAL_CATALOG: Product[] = [
     suppliesPNETPorts: 0,
     consumesLPower: 0,
     consumesNPower: 1.8,
-    consumesAddress: 1,
+    consumesAddress: 0,
     consumesPNETPorts: 0
   },
   { 
-    id: 6012, 
+    id: 0, 
     category: 'Keypad', 
     type: 'Finno Pulsador', 
     brand: 'ROEHN', 
-    model: 'RFN-P', 
-    description: 'Pulsador Série Finno Pulsador',
+    model: 'RFP', 
+    description: 'Pulsador série Finno P',
     channels: 1,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -430,17 +430,17 @@ const INITIAL_CATALOG: Product[] = [
     suppliesPNETPorts: 0,
     consumesLPower: 0,
     consumesNPower: 1.8,
-    consumesAddress: 1,
-    consumesPNETPorts: 0
+    consumesAddress: 0,
+    consumesPNETPorts: 1
   },
   // Keypads - Família BIANNI
   { 
-    id: 6020, 
+    id: 0, 
     category: 'Keypad', 
     type: 'Bianni Keypad', 
     brand: 'ROEHN', 
-    model: 'RBN-K', 
-    description: 'Teclado Série Bianni Keypad',
+    model: 'RBX', 
+    description: 'Keypad série Bianni',
     channels: 1,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -453,12 +453,12 @@ const INITIAL_CATALOG: Product[] = [
   },
   // Keypads - Família ION
   { 
-    id: 6030, 
+    id: 0, 
     category: 'Keypad', 
     type: 'ION Keypad', 
     brand: 'ROEHN', 
-    model: 'RIS-K', 
-    description: 'Teclado Série ION Keypad',
+    model: 'RIS', 
+    description: 'Keypad série ION',
     channels: 1,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -471,12 +471,12 @@ const INITIAL_CATALOG: Product[] = [
   },
   // Sensors
   { 
-    id: 7001, 
+    id: 0, 
     category: 'Sensor', 
     type: 'Widelux', 
     brand: 'ROEHN', 
     model: 'WIDELUX', 
-    description: 'Widelux sensor avançado de luz e movimento',
+    description: 'Sensor avançado de luz e movimento',
     channels: 1,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -488,12 +488,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 7002, 
+    id: 0, 
     category: 'Sensor', 
     type: 'X-Ray', 
     brand: 'ROEHN', 
     model: 'X-RAY', 
-    description: 'X-Ray sensor de temperatura e qualidade do ar',
+    description: 'Sensor de temperatura e qualidade do ar',
     channels: 1,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -505,12 +505,12 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 7003, 
+    id: 0, 
     category: 'Sensor', 
     type: 'Nano', 
     brand: 'ROEHN', 
     model: 'NANO', 
-    description: 'Sensor de movimento simples PNET',
+    description: 'Sensor de movimento simples',
     channels: 1,
     suppliesLPower: 0,
     suppliesNPower: 0,
@@ -552,12 +552,36 @@ const INITIAL_STATE: ProjectInputs = {
 
 type ViewMode = 'integrator' | 'backoffice';
 
+const DEVICE_TO_MODEL: Partial<Record<DeviceType, string>> = {
+  [DeviceType.KEYPAD_QUANTICA_K]: 'RQR-K',
+  [DeviceType.KEYPAD_QUANTICA_L]: 'RQR-L',
+  [DeviceType.KEYPAD_QUANTICA_P]: 'RQR-P',
+  [DeviceType.KEYPAD_QUANTICA_THERMOPAD]: 'RQR-T2',
+  [DeviceType.KEYPAD_FINNO_K]: 'RFK',
+  [DeviceType.KEYPAD_FINNO_AIR]: 'RFA',
+  [DeviceType.KEYPAD_FINNO_P]: 'RFP',
+  [DeviceType.KEYPAD_BIANNI_K]: 'RBX',
+  [DeviceType.KEYPAD_ION]: 'RIS',
+  [DeviceType.SENSOR_WIDELUX]: 'WIDELUX',
+  [DeviceType.SENSOR_XRAY]: 'X-RAY',
+  [DeviceType.SENSOR_NANO]: 'NANO',
+};
+
 const App: React.FC = () => {
   const [view, setView] = useState<ViewMode>('integrator');
   const [catalog, setCatalog] = useState<Product[]>(() => 
     INITIAL_CATALOG.map(p => ({ ...p, active: p.active !== false }))
   );
   const [showReasoning, setShowReasoning] = useState<boolean>(true);
+
+  const getCatalogDescription = (deviceType: DeviceType, fallback: string): string => {
+    const model = DEVICE_TO_MODEL[deviceType];
+    if (model) {
+      const item = catalog.find(p => p.model === model);
+      if (item?.description) return item.description;
+    }
+    return fallback;
+  };
   
   const [inputs, setInputs] = useState<ProjectInputs>(INITIAL_STATE);
   const [result, setResult] = useState<SpecificationResult | null>(null);
@@ -1032,25 +1056,25 @@ const App: React.FC = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                               <CounterInput 
                                 label="Keypad"
-                                sublabel="Keypad Quântica"
+                                sublabel={getCatalogDescription(DeviceType.KEYPAD_QUANTICA_K, 'Keypad série Quantica K')}
                                 value={inputs.counts[DeviceType.KEYPAD_QUANTICA_K]} 
                                 onChange={(v) => handleCountChange(DeviceType.KEYPAD_QUANTICA_K, v)}
                               />
                               <CounterInput 
                                 label="Keypad Lite"
-                                sublabel="Keypad Quântica Lite"
+                                sublabel={getCatalogDescription(DeviceType.KEYPAD_QUANTICA_L, 'Keypad série Quantica L')}
                                 value={inputs.counts[DeviceType.KEYPAD_QUANTICA_L]} 
                                 onChange={(v) => handleCountChange(DeviceType.KEYPAD_QUANTICA_L, v)}
                               />
                               <CounterInput 
                                 label="Pulsador"
-                                sublabel="Pulsador Quântica"
+                                sublabel={getCatalogDescription(DeviceType.KEYPAD_QUANTICA_P, 'Pulsador série Quantica P')}
                                 value={inputs.counts[DeviceType.KEYPAD_QUANTICA_P]} 
                                 onChange={(v) => handleCountChange(DeviceType.KEYPAD_QUANTICA_P, v)}
                               />
                               <CounterInput 
                                 label="Thermopad"
-                                sublabel="Keypad para controle de ar condicionado"
+                                sublabel={getCatalogDescription(DeviceType.KEYPAD_QUANTICA_THERMOPAD, 'Thermopad Quantica')}
                                 value={inputs.counts[DeviceType.KEYPAD_QUANTICA_THERMOPAD]} 
                                 onChange={(v) => handleCountChange(DeviceType.KEYPAD_QUANTICA_THERMOPAD, v)}
                               />
@@ -1072,20 +1096,20 @@ const App: React.FC = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                               <CounterInput 
                                 label="Keypad"
-                                sublabel="Keypad Finno com fio"
+                                sublabel={getCatalogDescription(DeviceType.KEYPAD_FINNO_K, 'Keypad série Finno K')}
                                 value={inputs.counts[DeviceType.KEYPAD_FINNO_K]} 
                                 onChange={(v) => handleCountChange(DeviceType.KEYPAD_FINNO_K, v)}
                               />
                               <CounterInput 
                                 label="Air"
-                                sublabel="Keypad Finno sem fio"
+                                sublabel={getCatalogDescription(DeviceType.KEYPAD_FINNO_AIR, 'Keypad série Finno Air')}
                                 value={inputs.counts[DeviceType.KEYPAD_FINNO_AIR]} 
                                 onChange={(v) => handleCountChange(DeviceType.KEYPAD_FINNO_AIR, Math.min(32, Math.max(0, v)))}
                                 max={32}
                               />
                               <CounterInput 
                                 label="Pulsador"
-                                sublabel="Pulsador Finno"
+                                sublabel={getCatalogDescription(DeviceType.KEYPAD_FINNO_P, 'Pulsador série Finno P')}
                                 value={inputs.counts[DeviceType.KEYPAD_FINNO_P]} 
                                 onChange={(v) => handleCountChange(DeviceType.KEYPAD_FINNO_P, v)}
                               />
@@ -1107,7 +1131,7 @@ const App: React.FC = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                               <CounterInput 
                                 label="Keypad"
-                                sublabel="Keypad Bianni"
+                                sublabel={getCatalogDescription(DeviceType.KEYPAD_BIANNI_K, 'Keypad série Bianni')}
                                 value={inputs.counts[DeviceType.KEYPAD_BIANNI_K]} 
                                 onChange={(v) => handleCountChange(DeviceType.KEYPAD_BIANNI_K, v)}
                               />
@@ -1129,7 +1153,7 @@ const App: React.FC = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                               <CounterInput 
                                 label="Keypad"
-                                sublabel="Keypad Ion"
+                                sublabel={getCatalogDescription(DeviceType.KEYPAD_ION, 'Keypad série ION')}
                                 value={inputs.counts[DeviceType.KEYPAD_ION]} 
                                 onChange={(v) => handleCountChange(DeviceType.KEYPAD_ION, v)}
                               />
@@ -1174,19 +1198,19 @@ const App: React.FC = () => {
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                             <CounterInput 
                               label="Widelux"
-                              sublabel="Sensor de movimento e luminosidade"
+                              sublabel={getCatalogDescription(DeviceType.SENSOR_WIDELUX, 'Sensor avançado de luz e movimento')}
                               value={inputs.counts[DeviceType.SENSOR_WIDELUX]} 
                               onChange={(v) => handleCountChange(DeviceType.SENSOR_WIDELUX, v)}
                             />
                             <CounterInput 
                               label="X-Ray"
-                              sublabel="Sensor de temperatura e qualidade do ar"
+                              sublabel={getCatalogDescription(DeviceType.SENSOR_XRAY, 'Sensor de temperatura e qualidade do ar')}
                               value={inputs.counts[DeviceType.SENSOR_XRAY]} 
                               onChange={(v) => handleCountChange(DeviceType.SENSOR_XRAY, v)}
                             />
                             <CounterInput 
                               label="Nano"
-                              sublabel="Sensor de movimento simples"
+                              sublabel={getCatalogDescription(DeviceType.SENSOR_NANO, 'Sensor de movimento simples')}
                               value={inputs.counts[DeviceType.SENSOR_NANO]} 
                               onChange={(v) => handleCountChange(DeviceType.SENSOR_NANO, v)}
                             />

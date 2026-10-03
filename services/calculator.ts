@@ -180,42 +180,42 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
       id: 'KEYPAD_QT_GROUP',
       types: [DeviceType.KEYPAD_QUANTICA_THERMOPAD],
       targetCategory: 'Keypad',
-      typeKeywords: ['Quantica Thermopad', 'Thermopad', 'RQR-TP', 'RQR-T'],
+      typeKeywords: ['Quantica Thermopad', 'Thermopad', 'RQR-TP', 'RQR-T2', 'RQR-T'],
       bomCategory: 'User Interface' as const
     },
     {
       id: 'KEYPAD_FINNO_K_GROUP',
       types: [DeviceType.KEYPAD_FINNO_K],
       targetCategory: 'Keypad',
-      typeKeywords: ['Finno Keypad', 'RFN-K'],
+      typeKeywords: ['Finno Keypad', 'RFN-K', 'RFK'],
       bomCategory: 'User Interface' as const
     },
     {
       id: 'KEYPAD_FINNO_AIR_GROUP',
       types: [DeviceType.KEYPAD_FINNO_AIR],
       targetCategory: 'Keypad',
-      typeKeywords: ['Finno Air', 'RFN-AIR', 'RFN-A'],
+      typeKeywords: ['Finno Air', 'RFN-AIR', 'RFA', 'RFN-A'],
       bomCategory: 'User Interface' as const
     },
     {
       id: 'KEYPAD_FINNO_P_GROUP',
       types: [DeviceType.KEYPAD_FINNO_P],
       targetCategory: 'Keypad',
-      typeKeywords: ['Finno Pulsador', 'RFN-P'],
+      typeKeywords: ['Finno Pulsador', 'RFN-P', 'RFP'],
       bomCategory: 'User Interface' as const
     },
     {
       id: 'KEYPAD_BIANNI_K_GROUP',
       types: [DeviceType.KEYPAD_BIANNI_K],
       targetCategory: 'Keypad',
-      typeKeywords: ['Bianni Keypad', 'RBN-K'],
+      typeKeywords: ['Bianni Keypad', 'RBN-K', 'RBX'],
       bomCategory: 'User Interface' as const
     },
     {
       id: 'KEYPAD_ION_GROUP',
       types: [DeviceType.KEYPAD_ION],
       targetCategory: 'Keypad',
-      typeKeywords: ['ION Keypad', 'ION', 'RIS-K'],
+      typeKeywords: ['ION Keypad', 'ION', 'RIS-K', 'RIS'],
       bomCategory: 'User Interface' as const
     },
     // Sensors
@@ -300,9 +300,11 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
     const antennasNeeded = Math.ceil(finnoAirCount / 16);
 
     const antennaProduct = activeCatalog.find(p => 
+      p.model === 'RRM-AIR' ||
       p.model === 'RFN-AIR-RX' || 
       p.type.toLowerCase().includes('antena') ||
       p.model.toLowerCase().includes('air-rx') ||
+      p.model.toLowerCase().includes('air') ||
       (p.category === 'Accessory' && p.description?.toLowerCase().includes('finno air'))
     );
 
@@ -310,16 +312,16 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
       items.push({
         sku: antennaProduct.model,
         name: `${antennaProduct.brand} ${antennaProduct.type}`,
-        description: antennaProduct.description || 'Antena receptora RF para keypads Finno Air',
+        description: antennaProduct.description || 'Antena receptora RLink para keypads Finno Air',
         quantity: antennasNeeded,
         category: 'Accessory',
         reasoning: `${antennasNeeded} ${antennasNeeded === 1 ? 'antena receptora' : 'antenas receptoras'} para atender ${finnoAirCount} ${finnoAirCount === 1 ? 'keypad' : 'keypads'} Finno Air (capacidade de até 16 keypads por antena).`
       });
     } else {
       items.push({
-        sku: 'RFN-AIR-RX',
+        sku: 'RRM-AIR',
         name: 'ROEHN Antena Receptora',
-        description: 'Antena receptora RF para keypads Finno Air (até 16 keypads por antena)',
+        description: 'Antena receptora RLink para keypads Finno Air (até 16 keypads por antena)',
         quantity: antennasNeeded,
         category: 'Accessory',
         reasoning: `${antennasNeeded} ${antennasNeeded === 1 ? 'antena receptora' : 'antenas receptoras'} para atender ${finnoAirCount} ${finnoAirCount === 1 ? 'keypad' : 'keypads'} Finno Air (capacidade de até 16 keypads por antena).`
@@ -666,7 +668,7 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
     if (!item.code) {
       const prod = catalog.find(p => p.model === item.sku);
       if (prod) {
-        item.code = prod.id;
+        item.code = prod.id === 0 ? '0000' : prod.id;
       }
     }
   });
