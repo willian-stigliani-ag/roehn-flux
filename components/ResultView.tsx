@@ -301,40 +301,40 @@ export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, integ
                 Escopo do Projeto
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5">
-                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
-                  <Lightbulb size={15} className="text-yellow-200 shrink-0" />
+                <div className="flex items-start gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Lightbulb size={15} className="text-yellow-200 shrink-0 mt-0.5" />
                   <div className="min-w-0 flex-1">
                     <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Iluminação</div>
                     <div className="font-bold text-xs sm:text-sm text-white truncate">{data.categoryCounts.lighting}</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
-                  <Blinds size={15} className="text-blue-200 shrink-0" />
+                <div className="flex items-start gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Blinds size={15} className="text-blue-200 shrink-0 mt-0.5" />
                   <div className="min-w-0 flex-1">
                     <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Persianas</div>
                     <div className="font-bold text-xs sm:text-sm text-white truncate">{data.categoryCounts.shading}</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
-                  <Thermometer size={15} className="text-red-200 shrink-0" />
+                <div className="flex items-start gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Thermometer size={15} className="text-red-200 shrink-0 mt-0.5" />
                   <div className="min-w-0 flex-1">
                     <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Climatização</div>
                     <div className="font-bold text-xs sm:text-sm text-white truncate">{data.categoryCounts.climate}</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
-                  <Grid3x3 size={15} className="text-cyan-200 shrink-0" />
+                <div className="flex items-start gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Grid3x3 size={15} className="text-cyan-200 shrink-0 mt-0.5" />
                   <div className="min-w-0 flex-1">
                     <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Keypads</div>
                     <div className="font-bold text-xs sm:text-sm text-white truncate">{data.categoryCounts.keypads}</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
-                  <Radar size={15} className="text-orange-200 shrink-0" />
+                <div className="flex items-start gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Radar size={15} className="text-orange-200 shrink-0 mt-0.5" />
                   <div className="min-w-0 flex-1">
                     <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Sensores</div>
                     <div className="font-bold text-xs sm:text-sm text-white truncate">{data.categoryCounts.sensors}</div>
@@ -349,28 +349,28 @@ export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, integ
                 Recursos do Sistema
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
-                  <Zap size={15} className="text-amber-200 shrink-0" />
+                <div className="flex items-start gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Zap size={15} className="text-amber-200 shrink-0 mt-0.5" />
                   <div className="min-w-0 flex-1">
-                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Energia L</div>
+                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Alimentação</div>
                     <div className={`font-bold text-xs sm:text-sm truncate ${data.powerStats.busLPower.consumed > data.powerStats.busLPower.supplied ? 'text-red-400' : 'text-white'}`}>
                       {data.powerStats.busLPower.consumed.toFixed(1)} <span className="text-[10px] font-normal text-brand-200">/ {data.powerStats.busLPower.supplied.toFixed(1)}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
-                  <Network size={15} className="text-emerald-200 shrink-0" />
+                <div className="flex items-start gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Network size={15} className="text-emerald-200 shrink-0 mt-0.5" />
                   <div className="min-w-0 flex-1">
-                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Energia RNET</div>
+                    <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Alimentação RNET</div>
                     <div className={`font-bold text-xs sm:text-sm truncate ${data.powerStats.nPower.consumed > data.powerStats.nPower.supplied ? 'text-red-400' : 'text-white'}`}>
                       {data.powerStats.nPower.consumed.toFixed(1)} <span className="text-[10px] font-normal text-brand-200">/ {data.powerStats.nPower.supplied.toFixed(1)}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
-                  <Hash size={15} className="text-purple-200 shrink-0" />
+                <div className="flex items-start gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <Hash size={15} className="text-purple-200 shrink-0 mt-0.5" />
                   <div className="min-w-0 flex-1">
                     <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Endereços</div>
                     <div className={`font-bold text-xs sm:text-sm truncate ${data.addressStats.consumed > data.addressStats.supplied ? 'text-red-400' : 'text-white'}`}>
@@ -379,8 +379,8 @@ export const ResultView: React.FC<ResultViewProps> = ({ data, projectName, integ
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
-                  <EthernetPort size={15} className="text-blue-200 shrink-0" />
+                <div className="flex items-start gap-2 bg-white/5 py-1 px-2 rounded border border-white/5 min-w-0">
+                  <EthernetPort size={15} className="text-blue-200 shrink-0 mt-0.5" />
                   <div className="min-w-0 flex-1">
                     <div className="text-[9px] text-brand-100 uppercase tracking-wide truncate">Portas PNET</div>
                     <div className={`font-bold text-xs sm:text-sm truncate ${data.pnetStats.consumed > data.pnetStats.supplied ? 'text-red-400' : 'text-white'}`}>

@@ -30,7 +30,7 @@ const INITIAL_CATALOG: Product[] = [
     description: 'Processador de sistema ROEHN',
     channels: 0,
     suppliesLPower: 0,
-    suppliesNPower: 55,
+    suppliesNPower: 50,
     suppliesAddress: 100,
     suppliesPNETPorts: 0,
     consumesLPower: 5,
@@ -286,7 +286,7 @@ const INITIAL_CATALOG: Product[] = [
     description: 'Hub de alimentação',
     channels: 0,
     suppliesLPower: 0,
-    suppliesNPower: 55,
+    suppliesNPower: 50,
     suppliesAddress: 0,
     suppliesPNETPorts: 0,
     consumesLPower: 0,
@@ -726,9 +726,11 @@ const App: React.FC = () => {
       <header className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40 shadow-xs print:hidden">
         <div className="mx-auto px-2 sm:px-4 h-16 flex items-center justify-between transition-all max-w-[98%] 2xl:max-w-[1920px]">
           <div className="flex items-center gap-2.5">
-            <div className="bg-[#746554] p-2 rounded-lg text-white shadow-2xs">
-              <Zap size={20} fill="currentColor" />
-            </div>
+            <img 
+              src="./icon.svg" 
+              alt="ROEHN Flux" 
+              className="w-9 h-9 rounded-lg shadow-2xs shrink-0 select-none object-contain" 
+            />
             <h1 className="font-bold text-xl text-gray-800 tracking-tight">
               ROEHN Flux
             </h1>

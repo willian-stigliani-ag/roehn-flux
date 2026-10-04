@@ -315,7 +315,6 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
         description: antennaProduct.description || 'Antena receptora RLink para keypads Finno Air',
         quantity: antennasNeeded,
         category: 'Accessory',
-        reasoning: `${antennasNeeded} ${antennasNeeded === 1 ? 'antena receptora' : 'antenas receptoras'} para atender ${finnoAirCount} ${finnoAirCount === 1 ? 'keypad' : 'keypads'} Finno Air (capacidade de até 16 keypads por antena).`
       });
     } else {
       items.push({
@@ -324,7 +323,6 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
         description: 'Antena receptora RLink para keypads Finno Air (até 16 keypads por antena)',
         quantity: antennasNeeded,
         category: 'Accessory',
-        reasoning: `${antennasNeeded} ${antennasNeeded === 1 ? 'antena receptora' : 'antenas receptoras'} para atender ${finnoAirCount} ${finnoAirCount === 1 ? 'keypad' : 'keypads'} Finno Air (capacidade de até 16 keypads por antena).`
       });
     }
   }
@@ -443,7 +441,7 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
                   description: bestCandidate.product.description || `${bestCandidate.product.category} (${bestCandidate.product.channels} Ch)`,
                   quantity: 1,
                   category: item.category,
-                  reasoning: 'Módulos atualizados para provisão de portas PNET.'
+                  reasoning: 'Modelo atualizado para provisão de portas PNET.'
               });
 
               deficitPNET -= bestCandidate.product.suppliesPNETPorts;
@@ -501,7 +499,7 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
                 description: product.description || `Expansão de Portas PNET (Módulo)`,
                 quantity: qty,
                 category: 'Accessory',
-                reasoning: 'Módulos adicionados para provisão de portas PNET.'
+                reasoning: 'Modelo atualizado para provisão de portas PNET'
             });
         });
     }
@@ -554,6 +552,8 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
   // Calculate total dedicated PS modules needed (1 per unit of device)
   const totalDedPSNeeded = devicesNeedingPS.reduce((sum, item) => sum + item.quantity, 0);
 
+  const dedicatedPSItems = new Set<BomItem>();
+
   if (totalDedPSNeeded > 0) {
       const psCandidates = activeCatalog
           .filter(p => (p.type === 'Power Supply' || p.type === 'Fonte de Alimentação') && p.suppliesLPower > 0)
@@ -561,14 +561,16 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
 
       if (psCandidates.length > 0) {
           const primaryPS = psCandidates[0];
-          items.push({
+          const dedicatedItem: BomItem = {
               sku: primaryPS.model,
               name: `${primaryPS.brand} ${primaryPS.type}`,
               description: primaryPS.description || `Fonte de Alimentação Dedicada`,
               quantity: totalDedPSNeeded,
               category: 'Accessory',
-              reasoning: 'Fontes adicionais incluídas para processadoras ou hubs.'
-          });
+              reasoning: 'Fonte dedicada para processadora ou hub adicionada.'
+          };
+          items.push(dedicatedItem);
+          dedicatedPSItems.add(dedicatedItem);
       } else {
            items.push({
             sku: 'MISSING-PWR-SUPPLY',
@@ -590,10 +592,10 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
     if (!p) return;
 
     const requiresDedicated = p.requiresDedicatedPS;
-    // Check various strings for the reasoning flag
-    const isDedicatedPS = item.reasoning?.includes('Dedicated Power Supply') || 
-                          item.reasoning?.includes('Fonte de alimentação dedicada') ||
-                          item.reasoning?.includes('Fontes adicionais incluídas para processadoras ou hubs.');
+    // Check if this is the dedicated PSU itself
+    const isDedicatedPS = dedicatedPSItems.has(item) ||
+                          item.reasoning?.includes('Dedicated Power Supply') || 
+                          item.reasoning?.includes('Fonte de alimentação dedicada');
 
     if (requiresDedicated) {
         // Device has its own dedicated PSU (added above), so its consumption is covered.
