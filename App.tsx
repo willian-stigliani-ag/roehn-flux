@@ -314,7 +314,8 @@ const INITIAL_CATALOG: Product[] = [
   },
   // Keypads - Família QUANTICA
   { 
-    id: 0, 
+    id: 9001, 
+    code: '0000',
     category: 'Keypad', 
     type: 'Quantica Keypad', 
     brand: 'ROEHN', 
@@ -331,7 +332,8 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 0, 
+    id: 9002, 
+    code: '0000',
     category: 'Keypad', 
     type: 'Quantica Keypad Lite', 
     brand: 'ROEHN', 
@@ -348,7 +350,8 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 0, 
+    id: 9003, 
+    code: '0000',
     category: 'Keypad', 
     type: 'Quantica Pulsador', 
     brand: 'ROEHN', 
@@ -365,7 +368,8 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 1
   },
   { 
-    id: 0, 
+    id: 9004, 
+    code: '0000',
     category: 'Keypad', 
     type: 'Quantica Thermopad', 
     brand: 'ROEHN', 
@@ -383,7 +387,8 @@ const INITIAL_CATALOG: Product[] = [
   },
   // Keypads - Família FINNO
   { 
-    id: 0, 
+    id: 9005, 
+    code: '0000',
     category: 'Keypad', 
     type: 'Finno Keypad', 
     brand: 'ROEHN', 
@@ -400,7 +405,8 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 0, 
+    id: 9006, 
+    code: '0000',
     category: 'Keypad', 
     type: 'Finno Air', 
     brand: 'ROEHN', 
@@ -417,7 +423,8 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 0, 
+    id: 9007, 
+    code: '0000',
     category: 'Keypad', 
     type: 'Finno Pulsador', 
     brand: 'ROEHN', 
@@ -435,7 +442,8 @@ const INITIAL_CATALOG: Product[] = [
   },
   // Keypads - Família BIANNI
   { 
-    id: 0, 
+    id: 9008, 
+    code: '0000',
     category: 'Keypad', 
     type: 'Bianni Keypad', 
     brand: 'ROEHN', 
@@ -453,7 +461,8 @@ const INITIAL_CATALOG: Product[] = [
   },
   // Keypads - Família ION
   { 
-    id: 0, 
+    id: 9009, 
+    code: '0000',
     category: 'Keypad', 
     type: 'ION Keypad', 
     brand: 'ROEHN', 
@@ -471,7 +480,8 @@ const INITIAL_CATALOG: Product[] = [
   },
   // Sensors
   { 
-    id: 0, 
+    id: 9010, 
+    code: '0000',
     category: 'Sensor', 
     type: 'Widelux', 
     brand: 'ROEHN', 
@@ -488,7 +498,8 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 0, 
+    id: 9011, 
+    code: '0000',
     category: 'Sensor', 
     type: 'X-Ray', 
     brand: 'ROEHN', 
@@ -505,7 +516,8 @@ const INITIAL_CATALOG: Product[] = [
     consumesPNETPorts: 0
   },
   { 
-    id: 0, 
+    id: 9012, 
+    code: '0000',
     category: 'Sensor', 
     type: 'Nano', 
     brand: 'ROEHN', 

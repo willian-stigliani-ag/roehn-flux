@@ -31,6 +31,7 @@ export type ProductCategory = 'Processor' | 'Lighting Control' | 'Shades Control
 
 export interface Product {
   id: number;
+  code?: string | number; // Código ERP/Exibição (ex: '0000', 7988)
   category: ProductCategory;
   type: string;
   brand: string;

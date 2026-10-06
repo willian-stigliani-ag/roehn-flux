@@ -62,6 +62,7 @@ const getTypesForCategory = (cat: ProductCategory): string[] => {
 
 const DEFAULT_NEW_PRODUCT: Product = {
   id: 1000,
+  code: '0000',
   brand: 'ROEHN',
   model: '',
   description: '',
@@ -103,7 +104,8 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
     const nextId = catalog.length > 0 ? Math.max(...catalog.map(p => p.id)) + 1 : 1001;
     setModalForm({
       ...DEFAULT_NEW_PRODUCT,
-      id: nextId
+      id: nextId,
+      code: '0000'
     });
     setModalMode('create');
     setModalError(null);
@@ -111,7 +113,10 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
   };
 
   const handleOpenEdit = (product: Product) => {
-    setModalForm({ ...product });
+    setModalForm({ 
+      ...product,
+      code: product.code !== undefined ? product.code : (product.id === 0 ? '0000' : String(product.id))
+    });
     setModalMode('edit');
     setModalError(null);
     setIsModalOpen(true);
@@ -136,6 +141,7 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
     let parsedValue: any = value;
     if (isFloat) parsedValue = parseFloat(value) || 0;
     if (isInt) parsedValue = parseInt(value, 10) || 0;
+    if (name === 'code') parsedValue = value;
 
     if (name === 'category') {
       const newCategory = value as ProductCategory;
@@ -158,13 +164,20 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
     }
 
     if (modalMode === 'create') {
-      if (catalog.some(p => p.id === modalForm.id)) {
-        setModalError(`O ID ${modalForm.id} já está em uso por outro produto.`);
-        return;
+      const payload: Product = {
+        ...modalForm,
+        code: modalForm.code !== undefined && String(modalForm.code).trim() !== '' ? String(modalForm.code).trim() : '0000'
+      };
+      if (catalog.some(p => p.id === payload.id)) {
+        payload.id = Math.max(...catalog.map(p => p.id)) + 1;
       }
-      onAddProduct(modalForm);
+      onAddProduct(payload);
     } else {
-      onUpdateProduct(modalForm);
+      const payload: Product = {
+        ...modalForm,
+        code: modalForm.code !== undefined && String(modalForm.code).trim() !== '' ? String(modalForm.code).trim() : '0000'
+      };
+      onUpdateProduct(payload);
     }
 
     setIsModalOpen(false);
@@ -312,9 +325,9 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
           <table className="w-full text-left text-xs border-separate border-spacing-0">
             <thead className="text-gray-700 uppercase font-bold text-[11px] tracking-wider select-none bg-neutral-50">
               <tr>
-                {/* Fixed Column 1: ID (sticky horizontally) */}
+                {/* Fixed Column 1: Código (sticky horizontally) */}
                 <th className="sticky left-0 z-20 bg-neutral-100 px-3 py-2.5 border-b-2 border-r border-gray-300 w-16 min-w-[64px] max-w-[64px]">
-                  ID
+                  Código
                 </th>
                 {/* Fixed Column 2: Marca (sticky horizontally) */}
                 <th className="sticky left-16 z-20 bg-neutral-100 px-3 py-2.5 border-b-2 border-r border-gray-300 w-20 min-w-[80px] max-w-[80px]">
@@ -383,10 +396,10 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredCatalog.map((product) => (
-                <tr key={`${product.id}-${product.model}`} className={`group hover:bg-neutral-50/80 transition-colors ${product.active === false ? 'opacity-65 bg-gray-50/50' : ''}`}>
-                  {/* Fixed Column 1: ID */}
-                  <td className="sticky left-0 z-10 bg-white group-hover:bg-neutral-50 px-3 py-2.5 border-b border-r border-gray-200 font-mono text-gray-500 font-medium w-16 min-w-[64px] max-w-[64px] transition-colors">
-                    {product.id === 0 ? '0000' : product.id}
+                <tr key={product.id} className={`group hover:bg-neutral-50/80 transition-colors ${product.active === false ? 'opacity-65 bg-gray-50/50' : ''}`}>
+                  {/* Fixed Column 1: Código */}
+                  <td className="sticky left-0 z-10 bg-white group-hover:bg-neutral-50 px-3 py-2.5 border-b border-r border-gray-200 font-mono text-gray-600 font-medium w-16 min-w-[64px] max-w-[64px] transition-colors">
+                    {product.code !== undefined ? product.code : (product.id === 0 ? '0000' : product.id)}
                   </td>
 
                   {/* Fixed Column 2: Marca */}
@@ -587,14 +600,14 @@ export const BackofficeView: React.FC<BackofficeViewProps> = ({
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">ID Único</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Código (ERP)</label>
                     <input 
-                      type="number"
-                      name="id"
-                      value={modalForm.id}
+                      type="text"
+                      name="code"
+                      placeholder="ex: 0000, 7988"
+                      value={modalForm.code !== undefined ? modalForm.code : modalForm.id}
                       onChange={handleModalInputChange}
-                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-mono text-gray-900 focus:bg-white focus:ring-1 focus:ring-neutral-400 outline-none"
-                      required
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-mono font-bold text-gray-900 focus:ring-1 focus:ring-neutral-400 outline-none"
                     />
                   </div>
                   <div>

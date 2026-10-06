@@ -670,7 +670,7 @@ export const generateSpecification = async (inputs: ProjectInputs, catalog: Prod
     if (!item.code) {
       const prod = catalog.find(p => p.model === item.sku);
       if (prod) {
-        item.code = prod.id === 0 ? '0000' : prod.id;
+        item.code = prod.code !== undefined ? prod.code : (prod.id === 0 ? '0000' : prod.id);
       }
     }
   });
